@@ -1,10 +1,10 @@
-#include"./hashTable.c"
+#include"./hashTable.h"
 
 int getHashValue(int *data){
-    return *(int *)data;
+    return *data;
 }
 
-void show(int *data){
+void show(int *key , int * data){
     printf("%d " , *data);
 }
 
@@ -27,7 +27,7 @@ void testPosition(HashTable *table){
         if(data != NULL){
             int hashValue = getHashValue(data);
             int rightPosition = hashValue % tableSize;
-            LinkList * list = createLinkListLList(getKeyForList , NULL , NULL);
+            LinkList * list = createLinkListLList(getKeyForList , NULL);
             while(dataPosition != rightPosition){
                 insertElementLList(&dataPosition , list);
                 dataPosition = rightPosition;
@@ -62,13 +62,12 @@ void testHashTable(HashTable * table , int ** datas , int num){
 
 int main(){
     HashTable * table = createHashTable(10 , NULL , NULL , getHashValue);
-    printf("tableSize = %d %d\n" , sizeof(table) , sizeof(*table));
     int num;
     scanf("%d" , &num);
     int **datas = (int **)malloc(sizeof(int *) * num);
     for(int i = 0 ; i < num ; ){
         int *data = (int *)malloc(sizeof(int));
-        *data = rand()%1000;
+        *data = rand()%10000;
         if(getElementsHTable(data , table) == NULL){
             printf("%d  %d\n" , i , *data);
             insertElementHTable(data , table);
