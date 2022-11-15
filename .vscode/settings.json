@@ -1,0 +1,29 @@
+{
+    "files.associations": {
+        "stdlib.h": "c",
+        "xutility": "c",
+        "cstdlib": "c",
+        "initializer_list": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "limits": "c",
+        "stdint.h": "c",
+        "cstdint": "c",
+        "leftrighttree.c": "cpp",
+        "hashtable.c": "cpp",
+        "heap.c": "cpp",
+        "cmath": "cpp",
+        "arraylist.h": "c",
+        "sort.c": "cpp",
+        "sort.h": "c",
+        "array": "c",
+        "vector": "c",
+        "xstring": "c",
+        "string": "c",
+        "string_view": "c",
+        "deque": "c",
+        "list": "c",
+        "queue": "c",
+        "xhash": "c"
+    }
+}
