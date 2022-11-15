@@ -114,6 +114,7 @@ void destory_list_LList(LinkList * list){
     list->getKeyFunc = NULL;
     list->head = list->tail = NULL;
     free(list);
+    list = NULL;
 }
 
 void destroyLList(LinkList * list){
