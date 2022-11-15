@@ -1,12 +1,14 @@
-#include "./linkList.c"
+#include "./linkList.h"
 
 void testListDataCorrect(LinkList *list, int **datas, int length) {
     for(int i = 0 ; i < length ; i ++){
         void * data = getElementByIndexLList(i , list);
         if(data != datas[i]){
-            printf("error\n");
+            printf("error data data is %d , data[%d] = %d\n" , data , i , datas[i]);
+            break;
         }
     }
+    printf("testListDataCorrect end \n");
 }
 
 void testLinkList(LinkList *list , int ** datas , int num){
@@ -21,15 +23,18 @@ void testLinkList(LinkList *list , int ** datas , int num){
 }
 
 int main(){
-    LinkList * list = createLinkListLList(NULL , NULL , NULL);
+    LinkList * list = createLinkListLList(NULL , NULL);
     int num;
     scanf("%d" , &num);
     int **datas = (int **)malloc(sizeof(int *) * num);
-    for(int i = 0 ; i < num ; i ++){
+    for(int i = 0 ; i < num ;){
         int *data = (int *)malloc(sizeof(int));
         *data = rand()%1000;
-        datas[i] = data;
-        insertElementLList(data , list);
+        if(getElementLList(data ,list) == NULL){
+            datas[i] = data;
+            insertElementLList(data , list);
+            i++;
+        }
     }
     testLinkList(list , datas , num);
 }

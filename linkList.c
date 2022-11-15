@@ -1,37 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-typedef struct LinkListNode{
-    void * key;
-    void * data;
-    struct LinkListNode * pre;
-    struct LinkListNode * next;
-}LinkListNode;
-
-typedef struct  LinkList{
-    LinkListNode * head , * tail;
-    void * (*getKeyFunc)(void *);
-    int (*compareFunc)(void *, void *);
-    void (*freeKeyFunc)(void *);
-}LinkList;
-
-//创建linklist，如果key固定，可以传入getKeyFunc,freeKeyFunc，如果不固定，传入NULL
-LinkList * createLinkListLList(void * (*getKeyFunc)(void *) , int (*compareFunc)(void * , void *) , void (*freeKeyFunc)(void *));
-//插入节点
-void insertElementLList(void *data , LinkList * list);
-//获取节点数据，根据key返回节点数据
-void * getElementLList(void * key , LinkList * list);
-//获取节点数据,index从0开始，如果大于list结点数量，返回null
-void * getElementByIndexLList(int index , LinkList * list);
-//删除节点
-void deleteElementLList(void * Key , LinkList * list);
-//判断是否为空
-int isEmptyLList(LinkList * list);
-//释放linklist内存
-void destroyLList(LinkList * list);
-
-void showLList(LinkList * list , void (*showFunc)(void *));
+#include "./linkList.h"
 
 int compare_default_LList(void * a, void * b){
     return *(int *)a  - *(int *)b;
@@ -41,11 +8,15 @@ void * get_key_default_LList(void * data){
     return data;
 }
 
-void free_key_default_LList(void * key){
-    return;
+void setFreeKeyFuncLList(void (*freeKeyFunc)(void * key) , LinkList * list){
+    list->freeKeyFunc = freeKeyFunc;
 }
 
-LinkList * createLinkListLList(void * (*getKeyFunc)(void *) , int (*compareFunc)(void * , void *) , void (*freeKeyFunc)(void *)){
+void setFreeDataFuncLList(void (*freeDataFunc)(void * data) , LinkList * list){
+    list->freeDataFunc = freeDataFunc;
+}
+
+LinkList * createLinkListLList(void * (*getKeyFunc)(void *) , int (*compareFunc)(void * , void *)){
     LinkList * list = (LinkList *)malloc(sizeof(LinkList));
     list->head = list->tail = NULL;
     list->getKeyFunc = getKeyFunc;
@@ -56,21 +27,15 @@ LinkList * createLinkListLList(void * (*getKeyFunc)(void *) , int (*compareFunc)
     if(compareFunc == NULL){
         list->compareFunc = compare_default_LList;
     }
-    list->freeKeyFunc = freeKeyFunc;
-    if(freeKeyFunc == NULL){
-        list->freeKeyFunc = free_key_default_LList;
-    }
+    list->freeKeyFunc = NULL;
+    list->freeDataFunc = NULL;
     return list;
-}
-
-void * create_key_LList(void * data ,LinkList * list){
-    return list->getKeyFunc(data);
 }
 
 void insertElementLList(void *data , LinkList * list){
     LinkListNode * node = (LinkListNode *)malloc(sizeof(LinkListNode));
     node->data = data;
-    node->key = create_key_LList(data , list);
+    node->key = list->getKeyFunc(data);
     node->next = NULL;
     node->pre = NULL;
     if(list->head == NULL){
@@ -106,6 +71,17 @@ void * getElementByIndexLList(int index , LinkList * list){
     return NULL;
 }
 
+void destory_node_LList(LinkListNode * node , LinkList * list){
+    if(list->freeKeyFunc != NULL){
+        list->freeKeyFunc(node->key);
+    }
+    if(list->freeDataFunc != NULL){
+        list->freeDataFunc(node->data);
+    }
+    node->pre = node->next = NULL;
+    free(node);
+}
+
 void deleteElementLList(void * key , LinkList * list){
     LinkListNode * node = list->head;
     while(node != NULL){
@@ -120,7 +96,7 @@ void deleteElementLList(void * key , LinkList * list){
             }else{
                 list->tail = node->pre;
             }
-            free(node);
+            destory_node_LList(node , list);
             break;
         }
         node = node->next;
@@ -131,21 +107,29 @@ int isEmptyLList(LinkList * list){
     return list->head == NULL;
 }
 
+void destory_list_LList(LinkList * list){
+    list->freeDataFunc = NULL;
+    list->freeDataFunc = NULL;
+    list->compareFunc = NULL;
+    list->getKeyFunc = NULL;
+    list->head = list->tail = NULL;
+    free(list);
+}
+
 void destroyLList(LinkList * list){
     LinkListNode * node = list->head;
     while(node != NULL){
         LinkListNode * temp = node;
         node = node->next;
-        list->freeKeyFunc(temp->key);
-        free(temp);
+        destory_node_LList(temp , list);
     }
-    free(list);
+    destory_list_LList(list);
 }
 
-void showLList(LinkList * list , void (*showFunc)(void *)){
+void showLList(LinkList * list , void (*showFunc)(void * , void *)){
     LinkListNode * node = list->head;
     while(node != NULL){
-        showFunc(node->key);
+        showFunc(node->key , node->data);
         node = node->next;
     }
     printf("\n");
