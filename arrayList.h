@@ -34,7 +34,7 @@ void destroyAList(ArrayList * list);
 //获取list数据大小
 int getSizeAList(ArrayList * list);
 //显示列表所有数据
-void showAList(ArrayList * list , void (*showFunc)(void *data));
+void showAList(ArrayList * list , void (*showFunc)(void *data) );
 
 #include "./arrayList.c"
 #endif
