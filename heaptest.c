@@ -1,4 +1,4 @@
-#include"./heap.c"
+#include"./heap.h"
 
 int main()
 {
@@ -15,7 +15,7 @@ int main()
     insertElementsHeap((void **)datas,num,heapInfo);
     //printf("%d\n",changeTime);
     for(int i = 0 ; i < num ; i ++){
-        printf("%d ",*(int *)pushElementHeap(heapInfo));
+        printf("%d ",*(int *)popElementHeap(heapInfo));
     }
     while(1){
         scanf("%d",&num);
