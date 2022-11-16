@@ -131,7 +131,7 @@ void test_LRTree(TreeLRTree *tree , void ** datas , int dataSize){
 }
 
 int main(){
-    TreeLRTree * tree = createTreeLRTree(compare , getKey , NULL);
+    TreeLRTree * tree = createTreeLRTree(compare , getKey);
     int num;
     scanf("%d" , &num);
     int **datas = (int **)malloc(sizeof(int *) * num);

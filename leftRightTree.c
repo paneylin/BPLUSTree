@@ -1,3 +1,4 @@
+#include "./leftRightTree.h"
 
 int compare_function_default_LRTree(void *key1 , void *key2){
     return *(int *)key1 - *(int *)key2;
@@ -5,6 +6,14 @@ int compare_function_default_LRTree(void *key1 , void *key2){
 
 void *get_key_function_default_LRTree(void *data){
     return data;
+}
+
+void setFreeKeyFuncLRTree(void (*freeKeyFunc)(void * key) , TreeLRTree * tree){
+    tree->freeKeyFunc = freeKeyFunc;
+}
+
+void setFreeDataFuncLRTree(void (*freeDataFunc)(void * data) , TreeLRTree * tree){
+    tree->freeDataFunc = freeDataFunc;
 }
 
 int balance_function_default_LRTree(TreeNodeLRTree *node , double balanceFactor){
@@ -33,11 +42,9 @@ TreeNodeLRTree * get_node_from_node_LRtree(TreeNodeLRTree * node){
     return node;
 }
 
-void setBalanceFactorLRTree(TreeLRTree *tree , double balanceFactor){
-    tree->balanceFactor = balanceFactor;
-}
 
-TreeLRTree *createTreeLRTree(int (*compareFunc)(void * , void *) , void *(*getKeyFunc)(void*) , void (*freeKeyFunc)(void *)){
+
+TreeLRTree *createTreeLRTree(int (*compareFunc)(void * , void *) , void *(*getKeyFunc)(void*)){
     TreeLRTree * tree = (TreeLRTree*)malloc(sizeof(TreeLRTree));
     tree->root = NULL;
     tree->compareFunc = compareFunc;
@@ -48,13 +55,15 @@ TreeLRTree *createTreeLRTree(int (*compareFunc)(void * , void *) , void *(*getKe
     if(getKeyFunc == NULL){
         tree->getKeyFunc = get_key_function_default_LRTree;
     }
-    tree->freeKeyFunc = freeKeyFunc;
-    tree->balanceFactor = 0.7;
+    tree->freeKeyFunc = NULL;
+    tree->freeDataFunc = NULL;
+    tree->balanceFactor = DEFAULT_BALANCE_FACTOR_LRTREE;
 } 
 
-TreeNodeLRTree * create_tree_node_LRTree(void * data , TreeLRTree * tree){
+TreeNodeLRTree * create_tree_node_LRTree(void * key ,void * data , TreeLRTree * tree){
     TreeNodeLRTree * node = (TreeNodeLRTree *)malloc(sizeof(TreeNodeLRTree));
     node->parent = node->left = node->right = NULL;
+    node->key = key;
     node->data = data;
     node->key = tree->getKeyFunc(data);
     node->size = 1;
@@ -65,9 +74,18 @@ int key_compare_LRTree(void * key1 , void * key2 , TreeLRTree * tree){
     return tree->compareFunc(key1 , key2);
 }
 
-void destroy_tree_node_LRTree(TreeNodeLRTree * node){
+void destroy_tree_node_LRTree(TreeNodeLRTree * node , TreeLRTree * tree){
     node->parent = node->left = node->right = NULL;
+    if(tree->freeKeyFunc != NULL){
+        tree->freeKeyFunc(node->key);
+        node->key = NULL;
+    }
+    if(tree->freeDataFunc != NULL){
+        tree->freeDataFunc(node->data);
+        node->data = NULL;
+    }
     free(node);
+    node = NULL;
 }
 
 void increase_size_LRTree(TreeNodeLRTree * node){
@@ -105,6 +123,14 @@ TreeNodeLRTree *check_balance_LRTree(TreeLRTree * tree){
         }
     } 
     return NULL;
+}
+
+void setBalanceFactorLRTree(TreeLRTree *tree , double balanceFactor){
+    tree->balanceFactor = balanceFactor;
+    TreeNodeLRTree * node = NULL;
+    while((node = check_balance_LRTree(tree)) != NULL){
+        balance_current_node_LRTree(node , tree);
+    }
 }
 
 TreeNodeLRTree *create_new_balance_tree_LRTree(ArrayList * listData , int start , int end){
@@ -145,7 +171,7 @@ TreeNodeLRTree *create_new_balance_tree_LRTree(ArrayList * listData , int start 
 ArrayList * get_tree_datas_left_to_right_LRTree(TreeNodeLRTree * node ,void * (*getNodeDataFunc)(void *)){
     TreeNodeLRTree * curNode = node;
     TreeNodeLRTree * preNode = node->parent;
-    ArrayList *list = createArrayListAList(NULL , NULL);
+    ArrayList *list = createArrayListAList(NULL);
     while(curNode != node->parent){
         if(curNode->parent == preNode){
             if(curNode->left != NULL){
@@ -199,18 +225,23 @@ void balance_current_node_LRTree(TreeNodeLRTree *node , TreeLRTree *tree){
 }
 
 void insertDataLRTree(void * data , TreeLRTree * tree){
-    if(tree == NULL){
-        printf("error , tree is null");
+    if(data == NULL){
+        printf("error , insert data is null\n");
         return;
     }
+    if(tree == NULL){
+        printf("error , tree is null\n");
+        return;
+    }
+    void * key = tree->getKeyFunc(data);
+    TreeNodeLRTree *insertNode = create_tree_node_LRTree(key , data , tree);
     if(tree->root == NULL){
-        tree->root = create_tree_node_LRTree(data , tree);
+        tree->root = insertNode;
         return;
     }
     TreeNodeLRTree *node = tree->root;
-    TreeNodeLRTree *insertNode = create_tree_node_LRTree(data , tree);
     while(node != NULL){
-        int value = key_compare_LRTree(tree->getKeyFunc(data) , node->key , tree);
+        int value = key_compare_LRTree(key , node->key , tree);
         if(value > 0){
             if(node->right == NULL){
                 node->right = insertNode;
@@ -230,7 +261,8 @@ void insertDataLRTree(void * data , TreeLRTree * tree){
                 node = node->left;
             }
         }else{
-            destroy_tree_node_LRTree(insertNode);
+            destroy_tree_node_LRTree(insertNode , tree);
+            printf("key exists , insert fail\n");
             break;
         }
     }
@@ -240,7 +272,8 @@ void insertDataLRTree(void * data , TreeLRTree * tree){
 }
 
 TreeNodeLRTree * find_node_in_tree_LRTree(void * key , TreeNodeLRTree * node ,TreeLRTree * tree){
-    if(node == NULL){
+    if(node == NULL || key == NULL){
+        printf("error , node or key is null\n");
         return NULL;
     }
     TreeNodeLRTree * cur = node;
@@ -258,8 +291,13 @@ TreeNodeLRTree * find_node_in_tree_LRTree(void * key , TreeNodeLRTree * node ,Tr
 }
 
 void * getDataFromTreeLRTree(void * key , TreeLRTree * tree){
+    if(key == NULL){
+        printf("key is null , find error");
+        return NULL;
+    }
     if(tree == NULL){
         printf("not find , tree is null");
+        return NULL;
     }
     TreeNodeLRTree * node = find_node_in_tree_LRTree(key ,tree->root , tree);
     if(node == NULL){
@@ -308,11 +346,11 @@ ArrayList * getTreeAllDatasLeftToRightLRTree(TreeLRTree * tree){
     return get_tree_datas_left_to_right_LRTree(tree->root ,get_data_from_node_LRtree);
 }
 
-void destroy_tree_nodes_LRTree(TreeNodeLRTree * node){
+void destroy_tree_nodes_LRTree(TreeNodeLRTree * node , TreeLRTree * tree){
     ArrayList * listNode = get_tree_datas_left_to_right_LRTree(node , get_node_from_node_LRtree);
     int size = getSizeAList(listNode);
     for(int i = 0 ; i < size ; i++){
-        destroy_tree_node_LRTree(getElementByIndexAList(i , listNode));
+        destroy_tree_node_LRTree(getElementByIndexAList(i , listNode) , tree);
     }
 }
 
@@ -320,6 +358,8 @@ void destroyTreeLRTree(TreeLRTree * tree){
     if(tree == NULL){
         return;
     }
-    destroy_tree_node_LRTree(tree->root);
+    destroy_tree_nodes_LRTree(tree->root , tree);
+    tree->root = NULL;
     free(tree);
+    tree = NULL;
 }
