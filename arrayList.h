@@ -9,18 +9,20 @@ typedef struct  ArrayList{
     void **data;
     int dataSize;
     int currentSize;
-    void * (*getKeyFunc)(void *);
     int (*compareFunc)(void *, void *);
+    void (*freeDataFunc)(void *);
 }ArrayList;
 
 const int ARRAYLIST_DEFAULT_SIZE = 10;
 
 //创建ArrayList，默认比较为地址比较
-ArrayList * createArrayListAList(void * (*getKeyFunc)(void *data) , int (*compareFunc)(void * key1, void *key2));
+ArrayList * createArrayListAList(int (*compareFunc)(void * data1, void *data2));
+//设置释放数据函数，如果设置了，释放list的时候释放数据内存
+void setFreeDataFuncAList(void (*freeDataFunc)(void * data), ArrayList * list);
 //插入节点
 void insertElementAList(void *data , ArrayList * list);
-//获取节点数据，根据key返回节点数据
-void * getElementAList(void * key , ArrayList * list);
+//获取节点数据，根据key返回节点数据,默认地址比较
+void * getElementAList(void *data , ArrayList * list);
 //获取节点数据,index从0开始，如果大于list结点数量，返回null
 void * getElementByIndexAList(int index , ArrayList * list);
 //删除节点

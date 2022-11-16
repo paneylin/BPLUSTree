@@ -2,6 +2,7 @@
 #define HASH_TABLE_H
 
 #include"./linkList.h"
+#include"./arrayList.h"
 #include <stdint.h>
 
 typedef struct HashTable{
@@ -37,6 +38,8 @@ void insertElementHTable(void * data , HashTable * table);
 void *getElementsHTable(void * key , HashTable * table);
 //销毁hashtable
 void destroyHTable(HashTable * table);
+//获取hashtable中所有的数据，返回ArrayList
+ArrayList * getAllDatasInTableHTable(HashTable * table);
 
 const int TABLE_SIZE_HASH_TABLE_DEFAULT = 100;
 

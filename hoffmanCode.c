@@ -1,3 +1,4 @@
+#include "./hoffmanCode.h"
 
 HoffManTree *create_HoffManTree_HoffMan(HoffManNode * root , int * code , int codeBitSize){
     HoffManTree * tree = (HoffManTree*)malloc(sizeof(HoffManTree));
@@ -30,13 +31,12 @@ char *get_key_HoffMan(HoffManNode *node){
     return &node->charactor;
 }
 
-int has_key_func_HoffMan(char *key){
+int hash_key_func_HoffMan(char *key){
     unsigned char keyValue = *key;
     return keyValue;
 }
 
-HashTable * gen_charactor_identify_table_HoffMan(ArrayList * listData){
-    HashTable * table = createHashTable(100 , get_key_HoffMan , compare_data_HoffMan , has_key_func_HoffMan);
+void  gen_charactor_identify_HoffMan(ArrayList * listData){
     for(int i = 0 ; i < getSizeAList(listData) ; i ++){
         HoffManNode * node = (HoffManNode *)getElementByIndexAList(i , listData);
         HoffManNode * temp = node;
@@ -64,9 +64,7 @@ HashTable * gen_charactor_identify_table_HoffMan(ArrayList * listData){
         node->code = code;
         node->bitSize = bitSize;
         //printf("bitSize is %d code is %x charactor is %c\n" , bitSize , code , node->charactor);
-        insertElementHTable(node , table);
     }
-    return table;
 }
 
 void gen_tree_hoffman_node_HoffMan(HoffManNode * parent , HoffManNode * left , HoffManNode * right){
@@ -124,19 +122,19 @@ HoffManTree *gen_HoffManTree_HoffMan(HoffManNode * root , HashTable * table , ch
 }
 
 HoffManTree *enCodeHoffMan(char * str){
-    TreeLRTree *tree = createTreeLRTree(compare_data_HoffMan , get_key_HoffMan , NULL);
+    HashTable *table = createHashTable(100 , get_key_HoffMan , compare_data_HoffMan , hash_key_func_HoffMan);
     int i = 0 ;
     while(str[i] != '\0'){
-        HoffManNode * charNode = getDataFromTreeLRTree(&str[i] , tree);
+        HoffManNode * charNode = getElementsHTable(&str[i] , table);
         if(charNode == NULL){
             charNode = create_HoffMan_node_HoffMan(str[i] , 1);
-            insertDataLRTree(charNode , tree);
+            insertElementHTable(charNode , table);
         }else{
             charNode->times++;
         }
         i++;
     }
-    ArrayList *list = getTreeAllDatasLeftToRightLRTree(tree);
+    ArrayList *list = getAllDatasInTableHTable(table);
     HeapInfo * heap = createHeapInfoHeap(100,compare_data_heap_HoffMan);
     for(int i = 0 ; i < getSizeAList(list) ; i ++){
         insertElementHeap(getElementByIndexAList(i , list),heap);
@@ -149,7 +147,7 @@ HoffManTree *enCodeHoffMan(char * str){
         gen_tree_hoffman_node_HoffMan(node3 , node1 , node2);
         insertElementHeap(node3,heap);
     }
-    HashTable * table = gen_charactor_identify_table_HoffMan(list);
+    gen_charactor_identify_HoffMan(list);
     int codeSize = 0;
     for(int i = 0 ; i < getSizeAList(list) ; i ++){
         HoffManNode * node = (HoffManNode *)getElementByIndexAList(i , list);
@@ -158,7 +156,8 @@ HoffManTree *enCodeHoffMan(char * str){
     destroyAList(list);
     HoffManTree * hoffTree = gen_HoffManTree_HoffMan(popElementHeap(heap) , table , str ,codeSize);  
     destroyHTable(table);
-    return hoffTree;  
+    destroyHeapInfoHeap(heap);
+    return hoffTree;
 }
 
 

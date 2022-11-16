@@ -2,11 +2,7 @@ int compare_default_AList(void * a, void * b){
     return a == b;
 }
 
-void * get_key_default_AList(void * data){
-    return data;
-}
-
-ArrayList * createArrayListAList(void * (*getKeyFunc)(void *) , int (*compareFunc)(void * , void *)){
+ArrayList * createArrayListAList(int (*compareFunc)(void * , void *)){
     ArrayList * list = (ArrayList *)malloc(sizeof(ArrayList));
     list->data = (void **)malloc(sizeof(void *) * ARRAYLIST_DEFAULT_SIZE);
     for(int i = 0 ; i < ARRAYLIST_DEFAULT_SIZE ; i++){
@@ -14,14 +10,11 @@ ArrayList * createArrayListAList(void * (*getKeyFunc)(void *) , int (*compareFun
     }
     list->dataSize = ARRAYLIST_DEFAULT_SIZE;
     list->currentSize = 0;
-    list->getKeyFunc = getKeyFunc;
-    if(getKeyFunc == NULL){
-        list->getKeyFunc = get_key_default_AList;
-    }
     list->compareFunc = compareFunc;
     if(compareFunc == NULL){
         list->compareFunc = compare_default_AList;
     }
+    list->freeDataFunc = NULL;
     return list;
 }
 
@@ -50,9 +43,9 @@ void insertElementAList(void *data , ArrayList * list){
     list->currentSize++;
 }
 
-void * getElementAList(void * key , ArrayList * list){
+void * getElementAList(void * data , ArrayList * list){
     for(int i = 0 ; i < list->currentSize ; i++){
-        if(list->compareFunc(list->getKeyFunc(list->data[i]) , key)){
+        if(list->compareFunc(list->data[i] , data)){
             return list->data[i];
         }
     }
@@ -67,9 +60,9 @@ void * getElementByIndexAList(int index , ArrayList * list){
     return list->data[index];
 }
 
-void deleteElementAList(void * key , ArrayList * list){
+void deleteElementAList(void * data , ArrayList * list){
     for(int i = 0 ; i < list->currentSize ; i++){
-        if(list->compareFunc(list->getKeyFunc(list->data[i]) , key)){
+        if(list->compareFunc(list->data[i] , data)){
             memmove(list->data + i , list->data + i + 1, sizeof(void *) * (list->dataSize - i - 1));
             list->currentSize--;
             list->data[list->currentSize] = NULL;
@@ -90,9 +83,20 @@ int isEmptyAList(ArrayList * list){
     return list->currentSize == 0;
 }
 
+void setFreeDataFuncAList(void (*freeDataFunc)(void * data), ArrayList * list){
+    list->freeDataFunc = freeDataFunc;
+}
+
 void destroyAList(ArrayList * list){
+    if(list->freeDataFunc != NULL){
+        for(int i = 0 ; i < list->currentSize ; i++){
+            list->freeDataFunc(list->data[i]);
+        }
+    }
     free(list->data);
+    list->data = NULL;
     free(list);
+    list = NULL;
 }
 
 int getSizeAList(ArrayList * list){

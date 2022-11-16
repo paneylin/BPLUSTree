@@ -21,7 +21,7 @@ void testLinkList(ArrayList *list , int ** datas , int num){
 }
 
 int main(){
-    ArrayList * list = createArrayListAList(NULL , NULL);
+    ArrayList * list = createArrayListAList(NULL);
     int num;
     scanf("%d" , &num);
     int **datas = (int **)malloc(sizeof(int *) * num);

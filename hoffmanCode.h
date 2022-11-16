@@ -1,10 +1,9 @@
-#include"./leftRightTree.c"
-#include"./heap.c"
-#include"./hashTable.c"
-#include <math.h>
-
 #ifndef HOFFMANCODE_H
 #define HOFFMANCODE_H
+#include"./arrayList.h"
+#include"./heap.h"
+#include"./hashTable.h"
+#include <math.h>
 
 typedef struct HoffManNode{
     char charactor;
@@ -23,8 +22,8 @@ typedef struct HoffManTree{
 }HoffManTree;
 
 const int BIT_SIZE_HOFFMAN = sizeof(int)*8 ;
-const unsigned int MAX_INTERGER_HOFFMAN = (1 << (BIT_SIZE_HOFFMAN-1)) - 1;
-const unsigned int MIN_INTERGER_HOFFMAN = 1 << (BIT_SIZE_HOFFMAN-1);
+const unsigned int MAX_INTERGER_HOFFMAN = (1 << (BIT_SIZE_HOFFMAN - 1)) - 1;
+const unsigned int MIN_INTERGER_HOFFMAN = 1 << (BIT_SIZE_HOFFMAN - 1);
 //编码
 HoffManTree *enCodeHoffMan(char * str);
 //解码

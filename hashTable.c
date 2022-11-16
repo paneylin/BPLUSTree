@@ -1,6 +1,5 @@
 #include "./hashTable.h"
 
-
 int compare_default_HTable(void * key1, void * key2){
     return *(int *)key1  - *(int *)key2;
 }
@@ -241,4 +240,15 @@ void destroyHTable(HashTable * table){
     destroyLList(table->datas);
     free(table);
     table = NULL;
+}
+
+ArrayList * getAllDatasInTableHTable(HashTable * table){
+    ArrayList * list = createArrayListAList(NULL);
+    for(int i = 0 ; i < table->tableSize ; i++){
+        void * data = get_data_from_position_HTable(i , table);
+        if(data != NULL){
+            insertElementAList(data , list);
+        }
+    }
+    return list;
 }

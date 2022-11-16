@@ -13,6 +13,7 @@ HeapInfo *createHeapInfoHeap(int basicHeapSize ,int (*compareFunc)(void * , void
     if(compareFunc == NULL){
         heapInfo->compareFunc = compare_value_default_Heap;
     }
+    heapInfo->freeDataFunc = NULL;
     return heapInfo;
 }
 
@@ -242,4 +243,26 @@ int getHeapSizeHeap(HeapInfo * heap){
 
 int isEmptyHeap(HeapInfo * heap){
     return heap->dataSize == 0;
+}
+
+void setFreeDataFuncHeap(void (*freeDataFunc)(void *),HeapInfo *heapInfo){
+    heapInfo->freeDataFunc = freeDataFunc;
+}
+
+void destroyHeapInfoHeap(HeapInfo * heapInfo){
+    if(heapInfo == NULL){
+        return;
+    }
+    if(heapInfo->heapData != NULL){
+        if(heapInfo->freeDataFunc != NULL){
+            for(int i = 0 ; i < heapInfo->dataSize ; i ++){
+                heapInfo->freeDataFunc(heapInfo->heapData[i]);
+                heapInfo->heapData[i] = NULL;
+            }
+        }
+        free(heapInfo->heapData);
+        heapInfo->heapData = NULL;
+    }
+    free(heapInfo);
+    heapInfo = NULL;
 }
