@@ -60,23 +60,40 @@ void * getElementByIndexAList(int index , ArrayList * list){
     return list->data[index];
 }
 
-void deleteElementAList(void * data , ArrayList * list){
+void *deleteElementAList(void * data , ArrayList * list){
     for(int i = 0 ; i < list->currentSize ; i++){
         if(list->compareFunc(list->data[i] , data)){
-            memmove(list->data + i , list->data + i + 1, sizeof(void *) * (list->dataSize - i - 1));
+            void * ret = list->data[i];
+            memmove(list->data + i , list->data + i + 1, sizeof(void *) * (list->currentSize - i - 1));
             list->currentSize--;
             list->data[list->currentSize] = NULL;
+            return ret;
         }
     }
+    return NULL;
 }
 
-void deleteElementByIndexAList(int index , ArrayList * list){
+void *deleteElementByIndexAList(int index , ArrayList * list){
     if(index >= list->currentSize){
-        return;
+        printf("index out of range , deleteElementByIndexAList failed\n");
+        return NULL;
     }
-    memmove(list->data + index , list->data + index + 1, sizeof(void *) * (list->dataSize - index - 1));
+    void * data = list->data[index];
+    memmove(list->data + index , list->data + index + 1, sizeof(void *) * (list->currentSize - index - 1));
     list->currentSize--;
     list->data[list->currentSize] = NULL;
+    return data;
+}
+
+void * deleteLastElementAList(ArrayList * list){
+    if(list->currentSize == 0){
+        printf("list is empty , deleteLastElementAList failed\n");
+        return NULL;
+    }
+    void * data = list->data[list->currentSize - 1];
+    list->currentSize--;
+    list->data[list->currentSize] = NULL;
+    return data;
 }
 
 int isEmptyAList(ArrayList * list){
@@ -108,4 +125,38 @@ void showAList(ArrayList * list , void (*showFunc)(void *)){
         showFunc(list->data[i]);
     }
     printf("\n");
+}
+
+void insertElementsAList(void **datas , int length , ArrayList * list){
+    while(list->currentSize + length > list->dataSize){
+        if(!resize_list_size_AList(list)){
+            return;
+        }
+    }
+    memmove(list->data + list->currentSize , datas , sizeof(void *) * length);
+}
+
+void insertArrayListAList(ArrayList *list1 , ArrayList *list2){
+    while(list1->currentSize + list2->currentSize > list1->dataSize){
+        if(!resize_list_size_AList(list1)){
+            return;
+        }
+    }
+    memmove(list2->data + list2->currentSize , list1->data , sizeof(void *) * list1->currentSize);
+}
+
+void * getFirstElementAList(ArrayList * list){
+    if(list->currentSize == 0){
+        printf("list is empty , getFirstElementAList failed\n");
+        return NULL;
+    }
+    return list->data[0];
+}
+
+void * getLastElementAList(ArrayList * list){
+    if(list->currentSize == 0){
+        printf("list is empty , getLastElementAList failed\n");
+        return NULL;
+    }
+    return list->data[list->currentSize - 1];
 }
