@@ -24,6 +24,9 @@
         "deque": "c",
         "list": "c",
         "queue": "c",
-        "xhash": "c"
+        "xhash": "c",
+        "math.h": "c",
+        "circlequeue.h": "c",
+        "xiosbase": "c"
     }
 }
