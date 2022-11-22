@@ -12,8 +12,8 @@ typedef struct HeapNodeFHeap
     int degree;
     struct HeapNodeFHeap *parent;
     struct HeapNodeFHeap *child;
-    struct HeapNodeFHeap *left;
     struct HeapNodeFHeap *right;
+    struct HeapNodeFHeap *left;
     struct HeapNodeFHeap *topChild;
 }HeapNodeFHeap;
 
@@ -22,6 +22,7 @@ typedef struct FHeap
     HeapNodeFHeap *topNode;
     ArrayList ** degreeList;
     int dgreeSize;
+    int maxDegree;
     int heapSize;
     void * (*getKeyFunc)(void *);
     int (*compareFunc)(void * , void *);
@@ -35,23 +36,27 @@ void setFreeDataFuncFHeap(void (*freeDataFunc)(void * data) , FHeap * heap);
 //设置释放key的函数
 void setFreeKeyFuncFHeap(void (*freeKeyFunc)(void * key) , FHeap * heap);
 //插入批量数据
-void insertElementsFHeap(void **data , int dataSize , FHeap *heapInfo);
+ArrayList *insertElementsFHeap(void **data , int dataSize , FHeap *heapInfo);
 //插入单个数据
-void insertElementFHeap(void *data , FHeap * heapInfo);
+HeapNodeFHeap *insertElementFHeap(void *data , FHeap * heapInfo);
 //获取堆顶数据并移除该数据
-void *popElementHeap(FHeap * heapInfo);
+void *popElementHeapFHeap(FHeap * heapInfo);
 //获取堆顶数据不移除数据
-void * getElementHeap(FHeap *heapInfo);
+void * getElementFHeap(FHeap *heapInfo);
 //返回当前heap元素数量
-int getHeapSizeHeap(FHeap * heap);
+int getHeapSizeFHeap(FHeap * heap);
 //返回当前heap是否为空
-int isEmptyHeap(FHeap * heap);
+int isEmptyFHeap(FHeap * heap);
 //合并heap1跟heap2，返回合并后的heap，同时释放heap1与heap2
 FHeap * combindHeapsFHeap(FHeap *heap1 , FHeap *heap2);
 //更新key1值为key2值
  void updateKeyFHeap(void *key1 , void *key2 , FHeap *heap);
 //销毁堆栈并释放内存
  void destoryFHeap(FHeap * heap);
+//更新node对应的key值大小，并返回该key对应的新节点node
+ HeapNodeFHeap *updateKeyWithNodeFHeap(void * key , HeapNodeFHeap * node , FHeap * heap);
+//查看key是否在FHeap当中
+ int isInFHeap(void * key , FHeap * heap);
 
  const int DEFAULT_DEGREE_SIZE = 100;
 

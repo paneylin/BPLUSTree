@@ -22,8 +22,9 @@ FHeap *createFHeap(int (*compareFunc)(void * , void *) , void *(*getKeyFunc)(voi
     heap->freeKeyFunc = NULL;
     heap->degreeList = (ArrayList **)malloc(sizeof(ArrayList *) * DEFAULT_DEGREE_SIZE);
     for(int i = 0 ; i < DEFAULT_DEGREE_SIZE ; i++){
-        heap->degreeList[i] = createArrayList();
+        heap->degreeList[i] = createArrayListAList(NULL);
     }
+    heap->maxDegree = DEFAULT_DEGREE_SIZE;
     heap->topNode = NULL;
     heap->dgreeSize = 0;
     heap->heapSize = 0;
@@ -46,10 +47,14 @@ void setFreeDataFuncFHeap(void (*freeDataFunc)(void * data) , FHeap * heap){
 void join_node_to_top_link_FHeap(HeapNodeFHeap * node , FHeap * heap){
     if(heap->topNode == NULL){
         heap->topNode = node;
+        heap->dgreeSize = 1;
     }else{
         if(heap->compareFunc(node->key , heap->topNode->key) > 0){
             heap->topNode = node;
         }
+    }
+    if(heap->dgreeSize < node->degree){
+        heap->dgreeSize = node->degree;
     }
     insertElementAList(node , heap->degreeList[node->degree - 1]);
 }
@@ -85,9 +90,8 @@ void merge_heap_node_FHeap(HeapNodeFHeap *node1 , HeapNodeFHeap *node2 , FHeap *
 }
 
 void keep_degree_only_one_FHeap(FHeap * heap){
-    int degreeSize = heap->dgreeSize;
-    for(int i = 0 ; i < degreeSize ; i++){
-        while(getArrayListSize(heap->degreeList[i]) > 1){
+    for(int i = 0 ; i < heap->dgreeSize ; i++){
+        while(getSizeAList(heap->degreeList[i]) > 1){
             HeapNodeFHeap * node1 = (HeapNodeFHeap *)deleteLastElementAList(heap->degreeList[i]);
             HeapNodeFHeap * node2 = (HeapNodeFHeap *)deleteLastElementAList(heap->degreeList[i]);
             if(heap->compareFunc(node1->key , node2->key) > 0){
@@ -99,35 +103,39 @@ void keep_degree_only_one_FHeap(FHeap * heap){
     }
 }
 
-void insertElementFHeap(void *data , FHeap * heapInfo){
+HeapNodeFHeap *insertElementFHeap(void *data , FHeap * heapInfo){
     if(data == NULL || heapInfo == NULL){
         printf("data or heapInfo is null\n");
-        return;
+        return NULL;
     }
     HeapNodeFHeap * node = create_heap_node_FHeap(heapInfo->getKeyFunc(data) , data);
     join_node_to_top_link_FHeap(node , heapInfo);
     keep_degree_only_one_FHeap(heapInfo);
     heapInfo->heapSize++;
+    return node;
 }
 
-void insertElementsFHeap(void **datas , int size , FHeap * heapInfo){
+ArrayList *insertElementsFHeap(void **datas , int size , FHeap * heapInfo){
     if(datas == NULL || heapInfo == NULL){
         printf("data or heapInfo is null\n");
         return;
     }
+    ArrayList * list = createArrayListAList(NULL);
     for(int i = 0 ; i < size ; i++){
         HeapNodeFHeap * node = create_heap_node_FHeap(heapInfo->getKeyFunc(datas[i]) , datas[i]);
         join_node_to_top_link_FHeap(node , heapInfo);
+        insertElementAList(node , list);
     }
     keep_degree_only_one_FHeap(heapInfo);
     heapInfo->heapSize += size;
+    return list;
 }
 
 void destroy_Heap_node_keep_data_HHeap(HeapNodeFHeap * node , FHeap * heap){
     if(node == NULL){
         return;
     }
-    node->child= node->parent = node->left = node->right = NULL;
+    node->child= node->parent = node->left = node->right = node->topChild = NULL;
     if(heap->freeKeyFunc != NULL){
         heap->freeKeyFunc(node->key);
     }
@@ -141,7 +149,7 @@ void destroy_Heap_node_HHeap(HeapNodeFHeap * node , FHeap * heap){
     if(node == NULL){
         return;
     }
-    node->child= node->parent = node->left = node->right = NULL;
+    node->child= node->parent = node->left = node->right = node->topChild = NULL;
     if(heap->freeKeyFunc != NULL){
         heap->freeKeyFunc(node->key); 
     }
@@ -154,28 +162,9 @@ void destroy_Heap_node_HHeap(HeapNodeFHeap * node , FHeap * heap){
     node = NULL;
 }
 
-/*void link_join_link_FHeap(HeapNodeFHeap * node1 , HeapNodeFHeap * node2){
-    if(node1 == NULL || node2 == NULL){
-        printf("node1 or node2 is null,join link failed\n");
-        return;
-    }
-    if(node1->left == node1){
-        join_node_to_link_FHeap(node2 , node1);
-    }else if(node2->left == node2){
-        join_node_to_link_FHeap(node1 , node2);
-    }else{
-        HeapNodeFHeap * node1Left = node1->left;
-        HeapNodeFHeap * node2Left = node2->left;
-        node1Left->right = node2;
-        node2->left = node1Left;
-        node2Left->right = node1;
-        node1->left = node2Left;
-    }
-}*/
-
 void re_cal_degree_HHeap(FHeap * heap){
     for(int i = heap->dgreeSize - 2 ; i >= 0 ; i--){
-        if(getArrayListSize(heap->degreeList[i]) > 0){
+        if(getSizeAList(heap->degreeList[i]) > 0){
             heap->dgreeSize = i + 1;
             break;
         }else{
@@ -189,7 +178,7 @@ void deside_new_top_node_FHeap(FHeap * heap){
         heap->topNode = NULL;
     }else{
         for(int i = 0 ; i < heap->dgreeSize ; i++){
-            if(getArrayListSize(heap->degreeList[i]) > 0){
+            if(getSizeAList(heap->degreeList[i]) > 0){
                 if(heap->topNode == NULL){
                     heap->topNode = (HeapNodeFHeap *)getFirstElementAList(heap->degreeList[i]);
                 }else{
@@ -210,7 +199,7 @@ void * popElementHeapFHeap(FHeap * heap){
     }
     HeapNodeFHeap * topNode = heap->topNode;
     heap->topNode = NULL;
-    deleteElementByKeyAList(topNode , heap->degreeList[topNode->degree - 1]);
+    deleteElementAList(topNode , heap->degreeList[topNode->degree - 1]);
     if(topNode->degree == heap->dgreeSize){
         re_cal_degree_HHeap(heap);
     }
@@ -230,7 +219,7 @@ void * popElementHeapFHeap(FHeap * heap){
     return data;
 }
 
-void * getElementHeap(FHeap *heapInfo){
+void * getElementFHeap(FHeap *heapInfo){
     if(heapInfo == NULL || heapInfo->topNode == NULL){
         printf("heapInfo is null or heapInfo is empty\n");
         return NULL;
@@ -238,11 +227,11 @@ void * getElementHeap(FHeap *heapInfo){
     return heapInfo->topNode->data;
 }
 
-int getHeapSizeHeap(FHeap * heap){
+int getHeapSizeFHeap(FHeap * heap){
     return heap->heapSize;
 }
 
-int isEmptyHeap(FHeap * heap){
+int isEmptyFHeap(FHeap * heap){
     return heap->heapSize == 0;
 }
 
@@ -268,10 +257,11 @@ void destoryFHeap(FHeap * heap){
         return;
     }
     if(heap->degreeList != NULL){
-        for(int i = 0 ; i < heap->dgreeSize ; i ++){
-            if(getArrayListSize(heap->degreeList[i]) > 0){
+        for(int i = 0 ; i < heap->maxDegree ; i ++){
+            if(getSizeAList(heap->degreeList[i]) > 0){
                 destroy_heap_tree_HHeap(getElementAList(0 , heap->degreeList[i]) , heap);
             }
+            destroyAList(heap->degreeList[i]);
         }
     }
     heap->topNode = NULL;
@@ -303,20 +293,22 @@ FHeap * combindHeapsFHeap(FHeap *heap1 , FHeap *heap2){
     }else if(heap2->topNode == NULL){
         heap->topNode = heap1->topNode;
     }else{
-        //heap->topNode = heap1->topNode;
-        //link_join_link_FHeap(heap1->topNode , heap2->topNode);
         if(heap->compareFunc(heap1->topNode->key , heap2->topNode->key) < 0){
             heap->topNode = heap2->topNode;
         }
     }
     heap1->topNode = heap2->topNode = NULL;
-    for(int i = 0 ; i < heap1->dgreeSize ; i ++){
-        insertArrayListAList(heap1->degreeList[i] , heap->degreeList[i]);
-        destoryArrayList(heap1->degreeList[i]);
+    for(int i = 0 ; i < heap1->maxDegree ; i ++){
+        if(getSizeAList(heap1->degreeList[i]) > 0){
+            insertArrayListAList(heap1->degreeList[i] , heap->degreeList[i]);
+        }
+        destroyAList(heap1->degreeList[i]);
     }
-    for(int i = 0 ; i < heap2->dgreeSize ; i ++){
-        insertArrayListAList(heap2->degreeList[i] , heap->degreeList[i]);
-        destoryArrayList(heap2->degreeList[i]);
+    for(int i = 0 ; i < heap2->maxDegree ; i ++){
+        if(getSizeAList(heap2->degreeList[i]) > 0){
+            insertArrayListAList(heap2->degreeList[i] , heap->degreeList[i]);
+        }
+        destroyAList(heap2->degreeList[i]);
     }
     heap->dgreeSize = heap1->dgreeSize > heap2->dgreeSize ? heap1->dgreeSize : heap2->dgreeSize;
     heap2->degreeList = heap1->degreeList = NULL;
@@ -333,30 +325,31 @@ HeapNodeFHeap *find_node_in_tree_by_key_FHeap(void * key , HeapNodeFHeap *node ,
     int compareValue = heap->compareFunc(node->key , key);
     if(compareValue == 0){
         return node;
-    }else if(compareValue > 0){
-        HeapNodeFHeap * child = node->child;
-        if(child != NULL){
-            HeapNodeFHeap * temp = child->right;
-            while(temp != node->child){
-                child = temp->right;
+    }else if(compareValue < 0){
+        return NULL;
+    }
+    if(node->child != NULL){
+        compareValue = heap->compareFunc(node->topChild->key , key);
+        if(compareValue == 0){
+            return node->topChild;
+        }else if(compareValue > 0){
+            HeapNodeFHeap * temp = node->child;
+            do{
                 if(find_node_in_tree_by_key_FHeap(key , temp , heap) != NULL){
                     return temp;
                 }
-                temp = child;
-            }
-            if(find_node_in_tree_by_key_FHeap(key , temp , heap) != NULL){
-                return temp;
-            }
+                temp = temp->right;
+            }while(temp != node->child);
+        }else{
+            return NULL;
         }
-    }else{
-        return NULL;
     }
     return NULL;
 }
 
 HeapNodeFHeap *find_node_by_key_FHeap(void *key , FHeap * heap){
     for(int i = 0 ; i < heap->dgreeSize ; i ++){
-        if(getArrayListSize(heap->degreeList[i]) > 0 && heap->compareFunc(((HeapNodeFHeap *)getFirstElementAList(heap->degreeList[i]))->key , key) >= 0){
+        if(getSizeAList(heap->degreeList[i]) > 0 && heap->compareFunc(((HeapNodeFHeap *)getFirstElementAList(heap->degreeList[i]))->key , key) >= 0){
             HeapNodeFHeap * node = find_node_in_tree_by_key_FHeap(key , getFirstElementAList(heap->degreeList[i]) , heap);
             if(node != NULL){
                 return node;
@@ -371,12 +364,15 @@ void updateKeyFHeap(void *key1 , void *key2 , FHeap *heap){
         printf("heap is null or heap is empty\n");
         return;
     }
-    HeapNodeFHeap * node = find_node_by_key_FHeap(key1 , heap->topNode);
+    if(key1 == key2){
+        printf("key1 adrress is equal to key2\n");
+    }
+    HeapNodeFHeap * node = find_node_by_key_FHeap(key1 , heap);
     if(node == NULL){
         printf("key is not in heap , update fialed\n");
         return;
     }else{
-        update_key_With_node_FHeap(key2 , node , heap);
+        updateKeyWithNodeFHeap(key2 , node , heap);
     }
 }
 
@@ -411,10 +407,24 @@ int cut_top_node_child_to_heap_FHeap(void * key , HeapNodeFHeap *node , FHeap * 
 }
 
 void modify_node_key_FHeap(void *key , HeapNodeFHeap *node , FHeap *heap){
+    if(key == node->key){
+        return;
+    }
     if(heap->freeKeyFunc != NULL){
         heap->freeKeyFunc(node->key);
     }
     node->key = key;
+}
+
+void exchange_node_relation_FHeap(HeapNodeFHeap *childNode , HeapNodeFHeap *pNode , FHeap *heap){
+    childNode->parent = pNode->parent;
+    pNode->parent = childNode;
+    if(pNode->parent != NULL){
+        
+    }
+    
+    
+    return temp;
 }
 
 void exchange_node_data_FHeap(HeapNodeFHeap *node1 , HeapNodeFHeap *node2){
@@ -427,61 +437,72 @@ void exchange_node_data_FHeap(HeapNodeFHeap *node1 , HeapNodeFHeap *node2){
 }
 
 HeapNodeFHeap * exchange_node_children_data_FHeap(HeapNodeFHeap *node, FHeap *heap){
-    if(node == NULL || node->child == NULL){
+    if(node == NULL){
+        printf("node is null , exchange failed\n");
         return NULL;
     }
-    HeapNodeFHeap * rsl = node;
-    HeapNodeFHeap * child = node->child;
-    do{
-        if(heap->compareFunc(child->key , rsl->key) > 0){
-            rsl = child;
+    HeapNodeFHeap * child = node->topChild;
+    if(child != NULL && heap->compareFunc(child->key , node->key) > 0){
+        exchange_node_data_FHeap(node , child);
+        HeapNodeFHeap * temp = child->right;
+        while(temp != child){
+            if(heap->compareFunc(temp->key , node->topChild->key) > 0){
+                node->topChild = temp;
+            }
+            temp = temp->right;
         }
-        child = child->right;
-    }while(child != node->child);
-    if(rsl != node){
-        exchange_node_data_FHeap(rsl , node);
-        return rsl;
-    }else{
-        return NULL;
+        return child;
     }
+    return node;
 }
 
-void *update_key_With_node_FHeap(void * key , HeapNodeFHeap * node , FHeap * heap){
+HeapNodeFHeap *updateKeyWithNodeFHeap(void * key , HeapNodeFHeap * node , FHeap * heap){
     if(node == NULL || heap == NULL){
         printf("node or heap is null , update fialed\n");
         return;
     }
-    if(node->parent == NULL){
-        if(heap->compareFunc(key , node->key) > 0){
-            modify_node_key_FHeap(key , node , heap);
-            if(heap->compareFunc(heap->topNode->key , key) < 0){
-                heap->topNode = node;
-            }
-        }else{
-            modify_node_key_FHeap(key , node , heap);
-            int newDegree = cut_top_node_child_to_heap_FHeap(key , node->child , heap);
-            if(node->degree > newDegree){
-                deleteElementAList(node , heap->degreeList[node->degree-1]);
-                insertArrayListAList(node , heap->degreeList[newDegree-1]);
-                node->degree = newDegree;
-            }
-            keep_degree_only_one_FHeap(heap);
+    int compareValue = 0;
+    if(key == node->key){
+        if(node->parent != NULL && heap->compareFunc(node->key , node->parent->topChild->key) > 0){
+            compareValue = 1;
+        }else if(node->topChild != NULL && heap->compareFunc(node->key , node->topChild->key) < 0){
+            compareValue = -1;
         }
     }else{
-        if(heap->compareFunc(key , node->key) > 0){
-            modify_node_key_FHeap(key , node , heap);
-            while(node->parent != NULL && heap->compareFunc(node->key , node->parent->key) > 0){
+        compareValue = heap->compareFunc(key , node->key);
+        modify_node_key_FHeap(key , node , heap);
+    }
+    if(compareValue == 0){
+        return node;
+    }else if(compareValue < 0){
+        HeapNodeFHeap * temp = node;
+        do{
+            node = temp;
+            temp = exchange_node_children_data_FHeap(node , heap);
+        }while(temp != NULL && node != temp);
+        return node;
+    }else{
+        while(node->parent != NULL){
+            if(heap->compareFunc(node->key , node->parent->key) > 0){
                 exchange_node_data_FHeap(node , node->parent);
                 node = node->parent;
+            }else if(heap->compareFunc(node->key , node->parent->topChild->key) > 0){
+                node->parent->topChild = node;
+                break;
+            }else{
+                break;
             }
-            if(heap->compareFunc(heap->topNode->key , key) < 0){
-                heap->topNode = node;
-            }
-        }else{
-            modify_node_key_FHeap(key , node , heap);
-            do{
-                node = exchange_node_children_data_FHeap(node , heap);
-            }while(node != NULL);
+        }
+        if(heap->compareFunc(heap->topNode->key , key) < 0){
+            heap->topNode = node;
         }
     }
+    return node;
+}
+
+int isInFHeap(void *key , FHeap *heap){
+    if(heap == NULL || heap->topNode == NULL){
+        return 0;
+    }
+    return find_node_by_key_FHeap(key , heap) == NULL ? 0 : 1;
 }
