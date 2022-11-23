@@ -552,6 +552,12 @@ void exchange_node_relation_down_FHeap(HeapNodeFHeap *pNode , FHeap *heap){
     }while(node != pNode);
     printf(" new topNode is %d \n", *(int *)topChild->topChild->key);
     pNode->child = temp;
+    if(temp != NULL){
+        do{
+            temp->parent = pNode;
+            temp = temp->right;
+        }while(temp != pNode->child);
+    }
     int degree = node->degree;
     node->degree = topChild->degree;
     topChild->degree = degree;
@@ -618,10 +624,10 @@ void updateKeyWithNodeFHeap(void * key , HeapNodeFHeap * node , FHeap * heap){
         }while(temp != node);
     }
     int compareValue = 0;
-    if(node->parent != NULL && heap->compareFunc(key , node->parent->topChild->key) >= 0){
-        compareValue = 1;
-    }else if(node->topChild != NULL && heap->compareFunc(key , node->topChild->key) < 0){
+    if(node->topChild != NULL && heap->compareFunc(key , node->topChild->key) < 0){
         compareValue = -1;
+    }else if(node->parent != NULL && heap->compareFunc(key , node->parent->topChild->key) >= 0){
+        compareValue = 1;
     }
     printf("compareValue is %d\n" , compareValue);
     if(compareValue == 0){
