@@ -416,15 +416,149 @@ void modify_node_key_FHeap(void *key , HeapNodeFHeap *node , FHeap *heap){
     node->key = key;
 }
 
-void exchange_node_relation_FHeap(HeapNodeFHeap *childNode , HeapNodeFHeap *pNode , FHeap *heap){
-    childNode->parent = pNode->parent;
-    pNode->parent = childNode;
-    if(pNode->parent != NULL){
-        
+void exchange_node_relation_up_FHeap(HeapNodeFHeap * node , FHeap * heap){
+    printf("exchange_node_relation_up_FHeap , node is %d , pNode is %d \n",*((int *)node->key) , *((int *)node->parent->key));
+    HeapNodeFHeap * pNode = node->parent;
+    HeapNodeFHeap  *temp = NULL;
+    temp = pNode->left;
+    if(node->left == node){
+        pNode->left = pNode;
+    }else{
+        pNode->left = node->left;
+        pNode->left->right = pNode;
+    }
+    if(temp == NULL){
+        node->left = NULL;
+    }else if(temp->left == temp){
+        node->left = node;
+    }else{
+        node->left = temp;
+        node->left->right = node;
+    }
+    temp = pNode->right;
+    if(node->right == node){
+        pNode->right = pNode;
+    }else{
+        pNode->right = node->right;
+        pNode->right->left = pNode;
+    }
+    if(temp == NULL){
+        node->right = NULL;
+    }else if(temp->right == temp){
+        node->right = node;
+    }else{
+        node->right = temp;
+        node->right->left = node;
+    }
+ 
+    node->parent = pNode->parent;
+    if(pNode->parent != NULL && pNode->parent ->child == pNode){
+        pNode->parent->child = node;
+    }
+    if(pNode->parent != NULL && pNode->parent ->topChild == pNode){
+        pNode->parent->topChild = node;
+    }
+    temp = pNode;
+    do{
+        temp->parent = node;
+        temp = temp->right;
+    }while (pNode != temp);
+    temp = pNode->child;
+    pNode->child = node->child;
+    pNode->topChild = node->topChild;
+    if(temp == node){
+        node->child = pNode; 
+    }else{
+        node->child = temp;
+    }
+    node->topChild = pNode;
+    if(pNode->child != NULL){
+        temp = pNode->child;
+        do{
+            temp->parent = pNode;
+            temp = temp->right;
+        }while(temp != pNode->child);
+    }
+    int degree = pNode->degree;
+    pNode->degree = node->degree;
+    node->degree = degree;
+}
+
+void exchange_node_relation_down_FHeap(HeapNodeFHeap *pNode , FHeap *heap){
+    printf("exchange_node_relation_down_FHeap , pNode is %d , topNode is %d" , *(int *)pNode->key , *(int *)pNode->topChild->key);
+    HeapNodeFHeap * topChild = pNode->topChild;
+    HeapNodeFHeap * node = NULL , *temp = NULL;
+    
+    temp = pNode->left;
+    if(topChild->left == topChild){
+        pNode->left = pNode;
+    }else{
+        pNode->left = topChild->left;
+        pNode->left->right = pNode;
+    }
+    if(temp == NULL){
+        topChild->left = NULL;
+    }else if(temp->left == temp){
+        topChild->left = topChild;
+    }else{
+        topChild->left = temp;
+        topChild->left->right = topChild;
     }
     
-    
-    return temp;
+    temp = pNode->right;
+    if(topChild->right == topChild){
+        pNode->right = pNode;
+    }else{
+        pNode->right = topChild->right;
+        pNode->right->left = pNode;
+    }
+    if(temp == NULL){
+        topChild->right = NULL;
+    }else if(temp->right == temp){
+        topChild->right = topChild;
+    }else{
+        topChild->right = temp;
+        topChild->right->left = topChild;
+    }
+    topChild->parent = pNode->parent;
+    if(pNode->parent != NULL){
+        if(pNode->parent->child == pNode){
+            pNode->parent->child = topChild;
+        }
+        pNode->parent->topChild = topChild;
+        node = pNode->parent->child;
+        do{
+            if(heap->compareFunc(node->key , pNode->parent->topChild->key) > 0){
+                pNode->parent->topChild = node;
+            }
+            node = node->right;
+        }while(node != pNode->parent->child);
+    }
+    temp = topChild->child;
+    if(pNode->child == topChild){
+        topChild->child = pNode;
+    }else{
+        topChild->child = pNode->child;
+    }
+    pNode->topChild = topChild->topChild;
+    topChild->topChild = pNode;
+    node = pNode;
+    do{
+        node->parent = topChild;
+        if(heap->compareFunc(node->key , topChild->topChild->key) > 0){
+            topChild->topChild = node;
+        }
+        node = node->right;
+    }while(node != pNode);
+    printf(" new topNode is %d \n", *(int *)topChild->topChild->key);
+    pNode->child = temp;
+    int degree = node->degree;
+    node->degree = topChild->degree;
+    topChild->degree = degree;
+    if(topChild->parent == NULL){
+        deleteElementByIndexAList(0 , heap->degreeList[topChild->degree - 1]);
+        insertElementAList(topChild , heap->degreeList[topChild->degree - 1]);
+    }
 }
 
 void exchange_node_data_FHeap(HeapNodeFHeap *node1 , HeapNodeFHeap *node2){
@@ -456,36 +590,57 @@ HeapNodeFHeap * exchange_node_children_data_FHeap(HeapNodeFHeap *node, FHeap *he
     return node;
 }
 
-HeapNodeFHeap *updateKeyWithNodeFHeap(void * key , HeapNodeFHeap * node , FHeap * heap){
+void updateKeyWithNodeFHeap(void * key , HeapNodeFHeap * node , FHeap * heap){
     if(node == NULL || heap == NULL){
         printf("node or heap is null , update fialed\n");
         return;
     }
-    int compareValue = 0;
-    if(key == node->key){
-        if(node->parent != NULL && heap->compareFunc(node->key , node->parent->topChild->key) > 0){
-            compareValue = 1;
-        }else if(node->topChild != NULL && heap->compareFunc(node->key , node->topChild->key) < 0){
-            compareValue = -1;
-        }
-    }else{
-        compareValue = heap->compareFunc(key , node->key);
+    if(key != node->key){
         modify_node_key_FHeap(key , node , heap);
     }
+    if(node == heap->topNode){
+        for(int i = 0 ; i < heap->dgreeSize ; i ++){
+            if(getSizeAList(heap->degreeList[i]) > 0){
+                HeapNodeFHeap * temp = (HeapNodeFHeap *)getFirstElementAList(heap->degreeList[i]);
+                if(heap->compareFunc(temp->key , heap->topNode->key) > 0){
+                    heap->topNode = temp;
+                }
+            }
+        }
+    }
+    if(node->parent != NULL && node == node->parent->topChild){
+        HeapNodeFHeap * temp = node;
+        do{
+            if(heap->compareFunc(temp->key , temp->parent->topChild->key) > 0){
+                temp->parent->topChild = temp;
+            }
+            temp = temp->right;
+        }while(temp != node);
+    }
+    int compareValue = 0;
+    if(node->parent != NULL && heap->compareFunc(key , node->parent->topChild->key) >= 0){
+        compareValue = 1;
+    }else if(node->topChild != NULL && heap->compareFunc(key , node->topChild->key) < 0){
+        compareValue = -1;
+    }
+    printf("compareValue is %d\n" , compareValue);
     if(compareValue == 0){
         return node;
     }else if(compareValue < 0){
-        HeapNodeFHeap * temp = node;
+        do{
+            exchange_node_relation_down_FHeap(node , heap);
+        }while(node->topChild != NULL && heap->compareFunc(node->key , node->topChild->key) < 0);
+        
+        /*HeapNodeFHeap * temp = node;
         do{
             node = temp;
             temp = exchange_node_children_data_FHeap(node , heap);
         }while(temp != NULL && node != temp);
-        return node;
+        return node;*/
     }else{
         while(node->parent != NULL){
             if(heap->compareFunc(node->key , node->parent->key) > 0){
-                exchange_node_data_FHeap(node , node->parent);
-                node = node->parent;
+                exchange_node_relation_up_FHeap(node , heap);
             }else if(heap->compareFunc(node->key , node->parent->topChild->key) > 0){
                 node->parent->topChild = node;
                 break;
@@ -493,11 +648,16 @@ HeapNodeFHeap *updateKeyWithNodeFHeap(void * key , HeapNodeFHeap * node , FHeap 
                 break;
             }
         }
+        if(node->parent == NULL){
+            deleteElementByIndexAList(0 , heap->degreeList[node->degree - 1]);
+            insertElementAList(node , heap->degreeList[node->degree - 1]);
+        }
         if(heap->compareFunc(heap->topNode->key , key) < 0){
             heap->topNode = node;
         }
     }
-    return node;
+    printf("update key success\n");
+    //return node;
 }
 
 int isInFHeap(void *key , FHeap *heap){

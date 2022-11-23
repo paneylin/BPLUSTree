@@ -73,29 +73,36 @@ int testFheapStruct(FHeap * heap){
         HeapNodeFHeap * node = (HeapNodeFHeap *)popCircleQueue(queue);
         int degree = node->degree;
         if(node->child != NULL){
-            if(node->child->degree != 1){
-                printf("testFheapStruct error , node %d first child-degree is %d" ,*(int *)node->key , node->child->degree);
-                return 0;
-            }
-            pushCircleQueue(node->child , queue);
-            HeapNodeFHeap * temp = node->child->right;
-            int childDegree = 2;
-            while(temp != node->child){
-                if(temp->degree != childDegree){
-                    printf("testFheapStruct error , node %d , %d child-degree is %d" , *(int *)node->key , childDegree , temp->degree);
+            int childDegree = 1;
+            int flag = 1;
+            HeapNodeFHeap * temp = node->child;
+            do{   
+                if(temp->parent != node){
+                    printf("testFheapStruct error , node %d child-degree is %d , child-parent is not node\n" ,*(int *)node->key , childDegree);
                     return 0;
+                }
+                if(temp->degree != childDegree){
+                    printf("testFheapStruct error , node %d , %d child-degree is %d\n" , *(int *)node->key , childDegree , temp->degree);
+                    return 0;
+                }
+                if(temp == node->topChild){
+                    flag = 0;
                 }
                 pushCircleQueue(temp , queue);
                 temp = temp->right;
                 childDegree ++;
-            }
+            }while(temp != node->child);
             if(childDegree != node->degree){
-                printf("testFheapStruct error , node %d degree is %d , last childDegree is %d" , *(int *)node->key , node->degree , childDegree - 1);
+                printf("testFheapStruct error , node %d degree is %d , last childDegree is %d\n" , *(int *)node->key , node->degree , childDegree - 1);
+                return 0;
+            }
+            if(flag){
+                printf("testFheapStruct error , node %d topChild is not in child list\n" , *(int *)node->key);
                 return 0;
             }
         }else{
             if(node->topChild != NULL){
-                printf("testFheapStruct error , node %d topChild is not NULL" , *(int *)node->key);
+                printf("testFheapStruct error , node %d topChild is not NULL\n" , *(int *)node->key);
                 return 0;
             }
         }
@@ -120,7 +127,7 @@ int testFHeapSequence(FHeap * heap){
                     return 0;
                 }
             }else if(compareKeyFunc(node->key , topNode->key) > 0){
-                printf("testFHeapSequence error , node %d is more likely be topNode, topNode is %d\n" ,*(int *)node->key , (int *)topNode->key);
+                printf("testFHeapSequence error , node %d is more likely be heap topNode, topNode is %d\n" ,*(int *)node->key , (int *)topNode->key);
                 return 0;
             }
             pushCircleQueue(getFirstElementAList(heap->degreeList[i]) , queue);
@@ -131,7 +138,7 @@ int testFHeapSequence(FHeap * heap){
         if(node->child != NULL){
             topNode = node->topChild;
             if(compareKeyFunc(topNode->key , node->key) > 0){
-                printf("testFHeapSequence error ,child node %d is more likely be father, PNode is %d\n" , *(int *)topNode->key , *(int *)node->key);
+                printf("testFHeapSequence error ,child node %d is more likely be father, PNode is %d\n " , *(int *)topNode->key , *(int *)node->key );
                 return 0;
             }
             HeapNodeFHeap * temp = node->child;
@@ -183,10 +190,10 @@ int main(){
     scanf("%d" , &num);
     int **datas = (int **)malloc(sizeof(int *) * num);
     HeapNodeFHeap **nodes = (HeapNodeFHeap **)malloc(sizeof(HeapNodeFHeap *) * num);
+    HeapNodeFHeap * node = NULL;
     for(int i = 0 ; i < num ; ){
         int *data = (int *)malloc(sizeof(int));
         *data = rand()%10000;
-        HeapNodeFHeap * node = createHeapNodeFHeap(data);
         if((node = insertElementFHeap(data , heao1)) != NULL){
             nodes[i] = node;
             datas[i] = data;
@@ -195,9 +202,15 @@ int main(){
     }
     printf("insert success\n");
     for(int i = 0 ; i < num ; i ++){
+        printf("old key is %d " , *datas[i]);
         int *newKey = datas[i];
         *newKey = rand()%10000;
-        
+        printf("new key is %d\n" , *newKey);
+        updateKeyWithNodeFHeap(newKey ,nodes[i] , heao1);
+        if(!testFHeap(heao1 , datas , num)){
+            printf("testFHeap error\n");
+            return 0;
+        } 
     }
 
     quickSort(datas , num , compareKeyFunc);
@@ -210,7 +223,7 @@ int main(){
         int *data = (int *)popElementHeapFHeap(heao1);
         if(!testFHeap(heao1 , datas , num - i)){
             printf("pop %d error , index is %d\n" , *(int *)data , i);
-            break;
+            return 0;
         }
         i ++;
     }

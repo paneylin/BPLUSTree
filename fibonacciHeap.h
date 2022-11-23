@@ -54,7 +54,7 @@ FHeap * combindHeapsFHeap(FHeap *heap1 , FHeap *heap2);
 //销毁堆栈并释放内存
  void destoryFHeap(FHeap * heap);
 //更新node对应的key值大小，并返回该key对应的新节点node
- HeapNodeFHeap *updateKeyWithNodeFHeap(void * key , HeapNodeFHeap * node , FHeap * heap);
+ void updateKeyWithNodeFHeap(void * key , HeapNodeFHeap * node , FHeap * heap);
 //查看key是否在FHeap当中
  int isInFHeap(void * key , FHeap * heap);
 
