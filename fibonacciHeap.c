@@ -631,7 +631,10 @@ void updateKeyWithNodeFHeap(void * key , HeapNodeFHeap * node , FHeap * heap){
     }
     printf("compareValue is %d\n" , compareValue);
     if(compareValue == 0){
-        return node;
+        if(heap->compareFunc(heap->topNode->key , key) < 0){
+            heap->topNode = node;
+        }
+        return;
     }else if(compareValue < 0){
         do{
             exchange_node_relation_down_FHeap(node , heap);

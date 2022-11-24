@@ -188,7 +188,7 @@ int main(){
     FHeap * heao1 = createFHeap(compareKeyFunc , getKeyFunc);
     int num;
     scanf("%d" , &num);
-    int **datas = (int **)malloc(sizeof(int *) * num);
+    int **datas = (int **)malloc(sizeof(int *) * num * 2);
     HeapNodeFHeap **nodes = (HeapNodeFHeap **)malloc(sizeof(HeapNodeFHeap *) * num);
     HeapNodeFHeap * node = NULL;
     for(int i = 0 ; i < num ; ){
@@ -197,6 +197,16 @@ int main(){
         if((node = insertElementFHeap(data , heao1)) != NULL){
             nodes[i] = node;
             datas[i] = data;
+            i++;
+        }
+    }
+    FHeap * heap2 = createFHeap(compareKeyFunc , getKeyFunc);
+    for(int i = 0 ; i < num ; ){
+        int *data = (int *)malloc(sizeof(int));
+        *data = rand()%10000;
+        if((node = insertElementFHeap(data , heap2)) != NULL){
+            nodes[num + i] = node;
+            datas[num + i] = data;
             i++;
         }
     }
@@ -212,16 +222,21 @@ int main(){
             return 0;
         } 
     }
-
-    quickSort(datas , num , compareKeyFunc);
+    
     if(!testFHeap(heao1 , datas , num)){
         printf("testFHeap error\n");
         return 0;
     }  
+    heao1 = combindHeapsFHeap(heao1 , heap2);
+    if(!testFHeap(heao1 , datas , num * 2)){
+        printf("testFHeap combind error\n");
+        return 0;
+    }  
     int i = 1;
+    quickSort(datas , num * 2 , compareKeyFunc);
     while(!isEmptyFHeap(heao1)){
         int *data = (int *)popElementHeapFHeap(heao1);
-        if(!testFHeap(heao1 , datas , num - i)){
+        if(!testFHeap(heao1 , datas , num * 2 - i)){
             printf("pop %d error , index is %d\n" , *(int *)data , i);
             return 0;
         }
