@@ -1,4 +1,6 @@
 
+#include"./CircleQueue.h"
+
 int isEmptyCircleQueue(CircleQueue *queue){
     return queue == NULL || queue->tail == queue->head;
 }
