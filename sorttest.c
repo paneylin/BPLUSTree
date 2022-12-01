@@ -27,8 +27,8 @@ void test_quick(){
         }
     }
     int *data = (int *)malloc(sizeof(int*));
-    *data = rand() % 10000;
-    int position = searchPrevDataBinary(datas , num ,data , compare);
+    *data = 0;
+    int position = searchPrevDataBinarySort(datas , num ,data , compare);
     printf("%d\n",position);
     printf("success\n");
 }

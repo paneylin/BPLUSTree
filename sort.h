@@ -14,8 +14,6 @@ void insertSort(void ** data , int size , int (*compareFunc)(void * , void *));
 //归并排序
 void combindSort(void ** data , int size , int (*compareFunc)(void * , void *));
 //二分搜索，返回key的位置，如果key不存在，返回key所在区间的前一个位置，如果key在第一个元素之前，返回-1
-int searchPrevDataBinary(void ** data , int size , void * key ,int (*compareFunc)(void * , void *));
-//二分查找，返回key的位置，如果key不存在，key前面的一个元素位置
 int searchPrevDataBinarySort(void ** data , int size , void * key ,int (*compareFunc)(void * , void *));
 //二分查找，返回key的位置，如果key不存在，返回-1
 int binarySearchSort(void ** data , int size , void * key ,int (*compareFunc)(void * , void *));
