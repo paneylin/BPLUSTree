@@ -1,17 +1,17 @@
 #include"./graph.h"
 
-int compare_npde_vlink_Graph(NodeVListGraph * a, NodeVListGraph * b){
-    return a->vIndex == b->vIndex;
+int compare_npde_vlink_Graph(NodeVlinkGraph * a, NodeVlinkGraph * b){
+    return a->u == b->u;
 }
 
-NodeVListGraph *create_node_vlink_graph(int vIndex , int w){
-    NodeVListGraph * node = (NodeVListGraph *)malloc(sizeof(NodeVListGraph));
-    node->vIndex = vIndex;
+NodeVlinkGraph *create_node_vlink_graph(int vIndex , int w){
+    NodeVlinkGraph * node = (NodeVlinkGraph *)malloc(sizeof(NodeVlinkGraph));
+    node->u = vIndex;
     node->w = w;
     return node;
 }
 
-void destroy_node_vlink_graph(NodeVListGraph * node){
+void destroy_node_vlink_graph(NodeVlinkGraph * node){
     free(node);
     node = NULL;
 }
@@ -36,7 +36,7 @@ void insertEdgeVLinkDirectGraph(int v , int u , int w , VLinkGraph * graph){
         printf("index out of range , insertEdgeVLinkDirectGraph failed\n");
         return;
     }
-    NodeVListGraph * node = create_node_vlink_graph(u , w);
+    NodeVlinkGraph * node = create_node_vlink_graph(u , w);
     if(getElementAList(node , graph->adj[v]) == NULL){
         insertElementAList(node , graph->adj[v]);
         graph->e++;
@@ -52,15 +52,15 @@ void insertEdgeVLinkUnDirectGraph(int v , int u , int w , VLinkGraph * graph){
         printf("index out of range , insertEdgeVLinkUnDirectGraph failed\n");
         return;
     }
-    NodeVListGraph * node = create_node_vlink_graph(u , w);
+    NodeVlinkGraph * node = create_node_vlink_graph(u , w);
     if(getElementAList(node , graph->adj[v]) == NULL){
         insertElementAList(node , graph->adj[v]);
         insertElementAList(create_node_vlink_graph(v , w) , graph->adj[u]);
         graph->e++;
     }else{
-        getElementAList(node , graph->adj[v])->w = w;
-        node->vIndex = u;
-        getElementAList(node , graph->adj[u])->w = w;
+        ((NodeVlinkGraph *)getElementAList(node , graph->adj[v]))->w = w;
+        node->u = v;
+        ((NodeVlinkGraph *)getElementAList(node , graph->adj[u]))->w = w;
         destroy_node_vlink_graph(node);
     }
 }
@@ -98,7 +98,7 @@ void insertEdgeVMutrixDirectGraph(int v , int u , int w , VMutrixGraph * graph){
     graph->adj[v][u] = w;
 }
 
-void insertEdgeVMutrixDirectGraph(int v , int u , int w , VMutrixGraph * graph){
+void insertEdgeVMutrixUnDirectGraph(int v , int u , int w , VMutrixGraph * graph){
     if(graph == NULL){
         printf("graph is null , failed\n");
         return;
@@ -122,8 +122,8 @@ VMutrixGraph *changeLinktoMutrixGraph(VLinkGraph * graph){
     VMutrixGraph * newGraph = createVMutrixGraph(graph->v);
     for(int i = 0 ; i < graph->v ; i++){
         for(int j = 0 ; j < getSizeAList(graph->adj[i]) ; j++){
-            NodeVListGraph * node = (NodeVListGraph *)getElementAListByIndex(j , graph->adj[i]);
-            newGraph->adj[i][node->vIndex] = node->w;
+            NodeVlinkGraph * node = (NodeVlinkGraph *)getElementByIndexAList(j , graph->adj[i]);
+            newGraph->adj[i][node->u] = node->w;
         }
     }
     return newGraph;

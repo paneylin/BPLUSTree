@@ -1,9 +1,9 @@
+#ifndef ARRAYLIST_H
+#define ARRAYLIST_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifndef ARRAYLIST_H
-#define ARRAYLIST_H
 
 typedef struct  ArrayList{
     void **data;

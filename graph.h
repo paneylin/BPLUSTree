@@ -1,5 +1,5 @@
-#ifndef Graph_h
-#define Graph_h
+#ifndef GRAPH_H
+#define GRAPH_H
 
 #include"./arrayList.h"
 
@@ -10,9 +10,9 @@ typedef struct VLinkGraph{
 }VLinkGraph;
 
 typedef struct NodeVlinkGraph{
-    int vIndex;
+    int u;
     int w;
-}NodeVListGraph;
+}NodeVlinkGraph;
 
 typedef struct VMutrixGraph{
     int v;
@@ -32,6 +32,7 @@ typedef struct DistanceGraph{
 }NodeVMutrixGraph;
 
 const int PATH_NOT_EXSIT_GRAPH = -1;
+const int UNREACHABLE_GRAPH = -1;
 //创建邻接表类型的图，输入图的顶点
 VLinkGraph * createVLinkGraph(int v);
 //增加邻接表类型有向图的边，输入边起点v，终点u，以及边权重w
