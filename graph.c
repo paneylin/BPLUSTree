@@ -144,3 +144,40 @@ VLinkGraph * changeMutrixtoLinkGraph(VMutrixGraph * graph){
     }
     return newGraph;
 }
+
+PathGraph *createPathGraph(int v , int u  , int w){
+    PathGraph * path = (PathGraph *)malloc(sizeof(PathGraph));
+    path->v = v;
+    path->u = u;
+    path->w = w;
+    return path;
+}
+
+DistanceGraph *createDistanceGraph(int v , int distance){
+    DistanceGraph * rsl = (DistanceGraph *)malloc(sizeof(DistanceGraph));
+    rsl->path = (PathGraph **)malloc(sizeof(PathGraph *) * v);
+    for(int i = 0 ;i < v ; i++){
+        rsl->path[i] = NULL;
+    }
+    rsl->distance = distance;
+    rsl->pathNum = v;
+    return distance;
+}
+
+void destroyPathGraph(PathGraph * path){
+    if(path == NULL){
+        return;
+    }
+    free(path);
+    path = NULL;
+}
+
+void destroyDistanceGraph(DistanceGraph * distance){
+    for(int i = 0 ; i < distance->pathNum ; i++){
+        destroyPathGraph(distance->path[i]);
+    }
+    free(distance->path);
+    distance->path = NULL;
+    free(distance);
+    distance = NULL;
+}

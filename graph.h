@@ -27,9 +27,10 @@ typedef struct PathGraph{
 }PathGraph;
 
 typedef struct DistanceGraph{
-    PathGraph *path;
+    PathGraph **path;
+    int pathNum;
     int distance;
-}NodeVMutrixGraph;
+}DistanceGraph;
 
 const int PATH_NOT_EXSIT_GRAPH = -1;
 const int UNREACHABLE_GRAPH = -1;
