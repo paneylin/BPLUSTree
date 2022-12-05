@@ -2,6 +2,7 @@
 #define PATH_TREE_H
 
 #include"./graph.h"
+#include"./leftRightTree.h"
 #include"./CircleQueue.h"
 
 typedef struct NodePathTree{
@@ -18,6 +19,11 @@ typedef struct PathTree{
     NodePathTree *root;
     ArrayList *nodeList;
 }PathTree;
+
+//销毁pathTree，并释放内存
+void destroyPathTree(PathTree *tree);
+//获取图上指定两点的最短路径，distanceGraph需自己销毁
+DistanceGraph* getShortestDistancePathTree(int start , int end , VLinkGraph *graph);
 
 #include "./pathTree.c"
 

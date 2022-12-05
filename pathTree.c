@@ -106,7 +106,11 @@ PathTree *create_path_tree_PathTree(int start ,int  vNum){
         node = create_node_PathTree(i);
         insertElementAList(node , tree->nodeList);
     }
-    node = getElementAList(start , tree->nodeList);
+    node = getElementByIndexAList(start , tree->nodeList);
+    if(node == NULL){
+        printf("Error: start node is null in create_path_tree_PathTree\n");
+        return NULL;
+    }
     node->distance = 0;
     tree->root = node;
 }
@@ -115,26 +119,41 @@ PathTree *gen_pathtree_PathTree(int start , VLinkGraph *graph){
     PathTree * tree = create_path_tree_PathTree(start , graph->v);
     CircleQueue *queue = createCircleQueue();
     pushCircleQueue(&start , queue);
+    TreeLRTree *lrtree = createTreeLRTree(NULL , NULL);
+    insertDataLRTree(&start , lrtree);
     while (!isEmptyCircleQueue(queue)){
         int v = *(int *)popCircleQueue(queue);
         int adjNum = getSizeAList(graph->adj[v]);
         for(int i = 0 ; i <adjNum ; i ++){
             NodeVlinkGraph *node = getElementByIndexAList(i , graph->adj[v]);
+            //printf("v = %d , u = %d, w = %d\n",v , node->u , node->w);
             reGen_node_tree_PathTree(v , node->u , node->w , tree);
-            pushCircleQueue(&node->u , queue);
-        }
+            if(getDataFromTreeLRTree(&node->u , lrtree) == NULL){
+                insertDataLRTree(&node->u , lrtree);
+                pushCircleQueue(&node->u , queue);
+            }        }
     }
+    destroyCircleQueue(queue);
     return tree;
 }
 
 DistanceGraph* getShortestDistancePathTree(int start , int end , VLinkGraph *graph){
+    if(start < 0 || start >= graph->v || end < 0 || end >= graph->v){
+        printf("Error: start or end is out of range in getShortestDistancePathTree\n");
+        return NULL;
+    }
     PathTree *pathTree = gen_pathtree_PathTree(start , graph);
     NodePathTree * endNode = get_node_from_tree_PathTree(end , pathTree);
+    if(endNode->distance == UNREACHABLE_GRAPH){
+        return NULL;
+    }
     DistanceGraph *distance = createDistanceGraph(endNode->height ,endNode->distance);
     int i = endNode->height - 1;
     while(endNode->parent != NULL){
         PathGraph *path = createPathGraph(endNode->parent->u ,endNode->u , endNode->distance - endNode->parent->distance);
         distance->path[i] = path;
+        i--;
+        endNode = endNode->parent;
     }
     destroyPathTree(pathTree);
     return distance;

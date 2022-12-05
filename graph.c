@@ -161,7 +161,7 @@ DistanceGraph *createDistanceGraph(int v , int distance){
     }
     rsl->distance = distance;
     rsl->pathNum = v;
-    return distance;
+    return rsl;
 }
 
 void destroyPathGraph(PathGraph * path){
