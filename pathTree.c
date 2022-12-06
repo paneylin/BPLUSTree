@@ -159,3 +159,78 @@ DistanceGraph* getShortestDistancePathTree(int start , int end , VLinkGraph *gra
     return distance;
 }
 
+ArrayList *get_all_leaf_node_PathTree(PathTree *tree){
+    ArrayList *leafList = createArrayListAList(NULL);
+    ArrayList *nodeList = tree->nodeList;
+    int size = getSizeAList(nodeList);
+    for(int i = 0 ; i < size ; i++){
+        NodePathTree *node = getElementByIndexAList(i , nodeList);
+        if(node->child == NULL){
+            insertElementAList(node , leafList);
+        }
+    }
+    return leafList;
+}
+
+DistanceGraph * get_longest_path_PathTree(PathTree *tree){
+    ArrayList *leafList = get_all_leaf_node_PathTree(tree);
+    int size = getSizeAList(leafList);
+    int maxDistance = 0;
+    int maxIndex = 0;
+    for(int i = 0 ; i < size ; i++){
+        NodePathTree *node = getElementByIndexAList(i , leafList);
+        if(node->distance > maxDistance){
+            maxDistance = node->distance;
+            maxIndex = i;
+        }
+    }
+    NodePathTree *node = getElementByIndexAList(maxIndex , leafList);
+    DistanceGraph *distance = createDistanceGraph(node->height ,node->distance);
+    int i = node->height - 1;
+    while(node->parent != NULL){
+        PathGraph *path = createPathGraph(node->parent->u ,node->u , node->distance - node->parent->distance);
+        distance->path[i] = path;
+        i--;
+        node = node->parent;
+    }
+    destroyArrayListAList(leafList);
+    return distance;
+}
+
+DistanceGraph *get_Sub_Graph_Diameter_PathTree(VLinkGraph *subGraph){
+    PathTree *pathTree = gen_pathtree_PathTree(0 , subGraph);
+    DistanceGraph * rsl = get_longest_path_PathTree(pathTree);
+    ArrayList *leafList = get_all_leaf_node_PathTree(pathTree);
+    int size = getSizeAList(leafList);
+    destroyPathTree(pathTree);
+    for(int i = 0 ; i < size ; i++){
+        NodePathTree *node = getElementByIndexAList(i , leafList);
+        pathTree = gen_pathtree_PathTree(node->u , subGraph);
+        DistanceGraph * tempRsl = get_longest_path_PathTree(pathTree);
+        if(tempRsl->distance > rsl->distance){
+            destroyDistanceGraph(rsl);
+            rsl = tempRsl;
+        }
+        destroyPathTree(pathTree);
+    }
+    return rsl;
+}
+
+DistanceGraph *getDiameterPathTreePathTree(VLinkGraph * graph){
+    ArrayList * subGraphs = getSubGraphsGraph(graph);
+    DistanceGraph * rsl = NULL;
+    int size = getSizeAList(subGraphs);
+    for(int i = 0 ; i < size ; i ++){
+        VLinkGraph *subGraph = getElementByIndexAList(i , subGraphs);
+        DistanceGraph *tempRsl = get_Sub_Graph_Diameter_PathTree(subGraph);
+        if(rsl == NULL || tempRsl->distance > rsl->distance){
+            destroyDistanceGraph(rsl);
+            rsl = tempRsl;
+        }
+        destroyVlinkGraph(subGraph);
+    }
+    setFreeDataFuncAList(destroyVlinkGraph , subGraphs);
+    destroyAList(subGraphs);
+    return rsl;
+}
+

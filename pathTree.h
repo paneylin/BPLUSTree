@@ -24,6 +24,8 @@ typedef struct PathTree{
 void destroyPathTree(PathTree *tree);
 //获取图上指定两点的最短路径，distanceGraph需自己销毁
 DistanceGraph* getShortestDistancePathTree(int start , int end , VLinkGraph *graph);
+//获取图上最长的最短路径
+DistanceGraph* getDiameterPathTreePathTree(VLinkGraph *graph);
 
 #include "./pathTree.c"
 

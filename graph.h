@@ -2,6 +2,9 @@
 #define GRAPH_H
 
 #include"./arrayList.h"
+#include"./leftRightTree.h"
+#include"./hashTable.h"
+#include"./CircleQueue.h"
 
 typedef struct VLinkGraph{
     int v;
@@ -32,6 +35,11 @@ typedef struct DistanceGraph{
     int distance;
 }DistanceGraph;
 
+typedef struct PointRelation{
+    int sourceP;
+    int targetP;
+}PointRelation;
+
 const int PATH_NOT_EXSIT_GRAPH = -1;
 const int UNREACHABLE_GRAPH = -1;
 //创建邻接表类型的图，输入图的顶点
@@ -50,6 +58,12 @@ void insertEdgeVMutrixDirectGraph(int v , int u , int w , VMutrixGraph * graph);
 VMutrixGraph *changeLinktoMutrixGraph(VLinkGraph * graph);
 //将矩阵类型的图转为邻接表类型的图；
 VLinkGraph * changeMutrixtoLinkGraph(VMutrixGraph * graph);
+//将一个图分割成几个子图，子图之间互相不连通
+ArrayList *getSubGraphsGraph(VLinkGraph *graph);
+//销毁图，并释放内存
+destroyVlinkGraph(VLinkGraph *graph);
+//销毁图，并释放内存
+destroyVMutrixGraph(VMutrixGraph *graph);
 
 #include"./graph.c"
 
