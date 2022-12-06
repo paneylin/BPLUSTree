@@ -1,5 +1,3 @@
-#include "./leftRightTree.h"
-
 int compare_function_default_LRTree(void *key1 , void *key2){
     return *(int *)key1 - *(int *)key2;
 }
@@ -41,8 +39,6 @@ void* get_data_from_node_LRtree(TreeNodeLRTree * node){
 TreeNodeLRTree * get_node_from_node_LRtree(TreeNodeLRTree * node){
     return node;
 }
-
-
 
 TreeLRTree *createTreeLRTree(int (*compareFunc)(void * , void *) , void *(*getKeyFunc)(void*)){
     TreeLRTree * tree = (TreeLRTree*)malloc(sizeof(TreeLRTree));
@@ -91,6 +87,13 @@ void destroy_tree_node_LRTree(TreeNodeLRTree * node , TreeLRTree * tree){
 void increase_size_LRTree(TreeNodeLRTree * node){
     while(node != NULL){
         node->size++;
+        node = node->parent;
+    }
+}
+
+void reduce_size_LRTree(TreeNodeLRTree * node){
+    while(node != NULL){
+        node->size--;
         node = node->parent;
     }
 }
@@ -154,6 +157,7 @@ TreeNodeLRTree *create_new_balance_tree_LRTree(ArrayList * listData , int start 
         }
     }else{
         int mid = (start + end) / 2;
+        //printf("mid = %d , start = %d , end = %d\n" , mid , start , end);
         root = getElementByIndexAList(mid , listData);
         left = create_new_balance_tree_LRTree(listData , start , mid - 1);
         right = create_new_balance_tree_LRTree(listData , mid + 1 , end);
@@ -169,6 +173,9 @@ TreeNodeLRTree *create_new_balance_tree_LRTree(ArrayList * listData , int start 
 }
 
 ArrayList * get_tree_datas_left_to_right_LRTree(TreeNodeLRTree * node ,void * (*getNodeDataFunc)(void *)){
+    if(node == NULL){
+        return NULL;
+    }
     TreeNodeLRTree * curNode = node;
     TreeNodeLRTree * preNode = node->parent;
     ArrayList *list = createArrayListAList(NULL);
@@ -362,4 +369,157 @@ void destroyTreeLRTree(TreeLRTree * tree){
     tree->root = NULL;
     free(tree);
     tree = NULL;
+}
+
+TreeNodeLRTree *get_min_node_from_tree_LRTree(TreeNodeLRTree *node){
+    if(node == NULL){
+        return NULL;
+    }
+    TreeNodeLRTree *cur = node;
+    while(cur->left != NULL){
+        cur = cur->left;
+    }
+    return cur;
+}
+
+TreeNodeLRTree *get_max_node_from_tree_LRTree(TreeNodeLRTree *node){
+    if(node == NULL){
+        return NULL;
+    }
+    TreeNodeLRTree *cur = node;
+    while(cur->right != NULL){
+        cur = cur->right;
+    }
+    return cur;
+}
+
+void replace_cNode_pNode_LRTree(TreeNodeLRTree * cNode , TreeNodeLRTree * pNode , TreeLRTree * tree){
+    if(cNode == NULL || pNode == NULL){
+        printf("error , node is null\n");
+        return;
+    }
+    TreeNodeLRTree *gNode = pNode->parent;
+    if(gNode == NULL){
+        tree->root = cNode;
+    }else{
+        if(gNode->left == pNode){
+            gNode->left = cNode;
+        }else{
+            gNode->right = cNode;
+        }
+    }
+    cNode->parent = gNode;
+    pNode->parent = NULL;
+    if(cNode == pNode->left){
+        cNode->right = pNode->right;
+        pNode->right != NULL ? pNode->right->parent = cNode : 0;
+    }else if(cNode == pNode->right){
+        cNode->left = pNode->left;
+        pNode->left != NULL ? pNode->left->parent = cNode : 0;
+    }else{
+        cNode->right = pNode->right;
+        cNode->left = pNode->left;
+        pNode->left != NULL ? pNode->left->parent = cNode : 0;
+        pNode->right != NULL ? pNode->right->parent = cNode : 0;
+    }
+    pNode->left = pNode->right = NULL;
+    cNode->size = pNode->size;
+}
+
+void delete_node_from_tree_LRTree(TreeNodeLRTree * node , TreeLRTree * tree){
+    if(node == NULL){
+        return;
+    }
+    TreeNodeLRTree * pNode = node->parent;
+    if(node->left == NULL && node->right == NULL){
+        if(pNode == NULL){
+            tree->root = NULL;
+        }else{
+            if(pNode->left == node){
+                pNode->left = NULL;
+                
+            }else{
+                pNode->right = NULL;
+            }
+            reduce_size_LRTree(pNode);
+        }
+        destroy_tree_node_LRTree(node , tree);
+    }else{
+        TreeNodeLRTree *cNode = NULL;
+        if(node->left == NULL){
+            cNode = get_min_node_from_tree_LRTree(node->right);
+        }else{
+            cNode = get_max_node_from_tree_LRTree(node->left);
+        }
+        if(cNode == node->right || cNode == node->left){
+            replace_cNode_pNode_LRTree(cNode , node , tree);
+            reduce_size_LRTree(cNode);
+            destroy_tree_node_LRTree(node , tree);
+        }else{
+            reduce_size_LRTree(cNode);
+            if(cNode->left != NULL){
+                replace_cNode_pNode_LRTree(cNode->left , cNode , tree);
+            }else if(cNode->right != NULL){
+                replace_cNode_pNode_LRTree(cNode->right , cNode , tree);
+            }else{
+                if(cNode->parent->left == cNode){
+                    cNode->parent->left = NULL;
+                }else{
+                    cNode->parent->right = NULL;
+                }
+            }
+            replace_cNode_pNode_LRTree(cNode , node , tree);
+            destroy_tree_node_LRTree(node , tree);
+        }
+    }
+    while((node = check_balance_LRTree(tree)) != NULL){
+        balance_current_node_LRTree(node , tree);
+    }
+}
+
+int isEmptyLRTree(TreeLRTree * tree){
+    if(tree == NULL){
+        printf("tree is null , isEmptyLRTree error\n");
+        return 1;
+    }
+    return tree->root == NULL;
+}
+
+void deleteElementLRTree(void * key , TreeLRTree * tree){
+    if(key == NULL){
+        printf("key is null , delete error");
+        return;
+    }
+    if(isEmptyLRTree(tree)){
+        printf("not find , tree is null or empty , delete error");
+        return;
+    }
+    TreeNodeLRTree * node = find_node_in_tree_LRTree(key ,tree->root , tree);
+    if(node == NULL){
+        printf("not find , delete fail\n");
+        return;
+    }
+    delete_node_from_tree_LRTree(node , tree);
+}
+
+void *popMinDataLRTree(TreeLRTree * tree){
+    if(isEmptyLRTree(tree)){
+        printf("not find , tree is null or empty , delete error");
+        return;
+    }
+    TreeNodeLRTree * node = get_min_node_from_tree_LRTree(tree->root);
+    void * data = node->data;
+    delete_node_from_tree_LRTree(node , tree);
+    return data;
+}
+
+void *popMaxDataLRTree(TreeLRTree * tree){
+    if(isEmptyLRTree(tree)){
+        printf("not find , tree is null or empty , delete error");
+        return;
+    }
+    TreeNodeLRTree * node = get_max_node_from_tree_LRTree(tree->root);
+    void * data = node->data;
+    delete_node_from_tree_LRTree(node , tree);
+    return data;
 }

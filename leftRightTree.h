@@ -45,6 +45,14 @@ ArrayList * getTreeAllDatasLeftToRightLRTree(TreeLRTree * tree);
 ArrayList * getTreeAllKeysLeftToRightLRTree(TreeLRTree * tree);
 //销毁二叉树释放内存
 void destroyTreeLRTree(TreeLRTree * tree);
+//删除二叉树key节点
+void deleteElementLRTree(void * key , TreeLRTree * tree);
+//返回树是否为空
+int isEmptyLRTree(TreeLRTree * tree);
+//返回树的最小节点并删除节点，不能设置freeKeyFunc和freeDataFunc
+void *popMinDataLRTree(TreeLRTree * tree);
+//返回树的最大节点数据并删除改节点，不能设置freeKeyFunc和freeDataFunc
+void *popMaxDataLRTree(TreeLRTree * tree);
 
 #include "./LeftRightTree.c"
 
