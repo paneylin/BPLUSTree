@@ -53,6 +53,10 @@ int isEmptyLRTree(TreeLRTree * tree);
 void *popMinDataLRTree(TreeLRTree * tree);
 //返回树的最大节点数据并删除改节点，不能设置freeKeyFunc和freeDataFunc
 void *popMaxDataLRTree(TreeLRTree * tree);
+//获取树中key最小的数据
+void * getMinDataLRTree(TreeLRTree * tree);
+//获取树中key最小的数据
+void * getMaxDataLRTree(TreeLRTree * tree);
 
 #include "./LeftRightTree.c"
 
