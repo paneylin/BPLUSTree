@@ -1,5 +1,3 @@
-#include"./graph.h"
-
 int *get_source_p_for_key(PointRelation *pRelation){
     return &pRelation->sourceP;
 }
@@ -79,7 +77,7 @@ void insertEdgeVLinkUnDirectGraph(int v , int u , int w , VLinkGraph * graph){
     if(getElementAList(node , graph->adj[v]) == NULL){
         insertElementAList(node , graph->adj[v]);
         insertElementAList(create_node_vlink_graph(v , w) , graph->adj[u]);
-        graph->e++;
+        graph->e += 2;
     }else{
         ((NodeVlinkGraph *)getElementAList(node , graph->adj[v]))->w = w;
         node->u = v;
@@ -131,7 +129,7 @@ void insertEdgeVMutrixUnDirectGraph(int v , int u , int w , VMutrixGraph * graph
         return;
     }
     if(graph->adj[v][u] == PATH_NOT_EXSIT_GRAPH){  
-        graph->e++;
+        graph->e += 2;
     }
     graph->adj[v][u] = w;
     graph->adj[u][v] = w;
@@ -234,7 +232,9 @@ ArrayList *getSubGraphsGraph(VLinkGraph *graph){
     setBlockSizeHTable(graph->v , map);
     TreeLRTree *nodeTree = createTreeLRTree(NULL , NULL);
     for(int i = 0 ; i < graph->v ; i ++){
-        insertDataLRTree(&i , nodeTree);
+        int *j = (int *)malloc(sizeof(int));
+        *j = i;
+        insertDataLRTree(j , nodeTree);
     }
     CircleQueue *queue = createCircleQueue(NULL);
     while(!isEmptyLRTree(nodeTree)){
@@ -244,9 +244,10 @@ ArrayList *getSubGraphsGraph(VLinkGraph *graph){
         int *souceP = (int *)popMinDataLRTree(nodeTree);
         gen_point_relation_map(*souceP , newTargetP++ , map);
         pushCircleQueue(souceP , queue);
+        //printf("%d " , *souceP);
         while(!isEmptyCircleQueue(queue)){
             souceP = popCircleQueue(queue);
-            int targetStartP = get_target_point_relation_Graph(souceP , map);
+            int targetStartP = get_target_point_relation_Graph(*souceP , map);
             add_point_VLinkGraph(subGraph);
             int relationNodeSize = getSizeAList(graph->adj[*souceP]);
             for(int i = 0 ; i < relationNodeSize ; i ++){
@@ -258,12 +259,21 @@ ArrayList *getSubGraphsGraph(VLinkGraph *graph){
                 }
                 insert_edge_VLinkGraph(targetStartP , targetP , vlinkNode->w,subGraph);
                 if(getDataFromTreeLRTree(&vlinkNode->u , nodeTree)){
-                    pushCircleQueue(vlinkNode->u , queue);
-                    deleteElementLRTree(&vlinkNode->u , nodeTree);
+                    int *lastU = (int *)malloc(sizeof(int));
+                    *lastU = vlinkNode->u;
+                    pushCircleQueue(lastU , queue);
+                    int * freeData = (int *)deleteElementLRTree(&vlinkNode->u , nodeTree);
+                    free(freeData);
                 }
+                //printf("%d %d %d\n" , *souceP ,vlinkNode->u , vlinkNode->w);
             }
+            free(souceP);
         }
+        //showVLinkGraph(graph);
+        //showVLinkGraph(subGraph);
     }
+    //showVLinkGraph(graph);
+    printf("\n1");
     return subGraphs;
 }
 
@@ -292,14 +302,29 @@ void destroyVMutrixGraph(VMutrixGraph * graph){
     }
     if(graph->adj != NULL){
         for(int i = 0 ; i < graph->v ; i ++){
-        if(graph->adj[i] != NULL){
-            free(graph->adj[i]);
-            graph->adj[i] = NULL;
+            if(graph->adj[i] != NULL){
+                free(graph->adj[i]);
+                graph->adj[i] = NULL;
+            }
+            free(graph->adj);
         }
-        free(graph->adj);
         graph->adj = NULL;
     }
     free(graph);
     graph = NULL;
-    
+}
+
+void showVLinkGraph(VLinkGraph *graph){
+    if(graph == NULL){
+        printf("graph is null , show nothing\n");
+        return ;
+    }
+    printf("show graph\n");
+    for(int i = 0 ; i < graph->v ; i ++){
+        int size = getSizeAList(graph->adj[i]);
+        for(int j = 0 ; j < size ; j ++){
+            NodeVlinkGraph *node = getElementByIndexAList(j , graph->adj[i]);
+            printf("%d %d %d\n" , i , node->u , node->w);
+        }
+    }
 }

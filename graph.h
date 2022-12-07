@@ -61,9 +61,9 @@ VLinkGraph * changeMutrixtoLinkGraph(VMutrixGraph * graph);
 //将一个图分割成几个子图，子图之间互相不连通
 ArrayList *getSubGraphsGraph(VLinkGraph *graph);
 //销毁图，并释放内存
-destroyVlinkGraph(VLinkGraph *graph);
+void destroyVlinkGraph(VLinkGraph *graph);
 //销毁图，并释放内存
-destroyVMutrixGraph(VMutrixGraph *graph);
+void destroyVMutrixGraph(VMutrixGraph *graph);
 
 #include"./graph.c"
 
