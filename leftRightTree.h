@@ -46,7 +46,7 @@ ArrayList * getTreeAllKeysLeftToRightLRTree(TreeLRTree * tree);
 //销毁二叉树释放内存
 void destroyTreeLRTree(TreeLRTree * tree);
 //删除二叉树key节点
-void deleteElementLRTree(void * key , TreeLRTree * tree);
+void *deleteElementLRTree(void * key , TreeLRTree * tree);
 //返回树是否为空
 int isEmptyLRTree(TreeLRTree * tree);
 //返回树的最小节点并删除节点，不能设置freeKeyFunc和freeDataFunc

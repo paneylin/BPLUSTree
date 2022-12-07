@@ -270,7 +270,7 @@ void insertDataLRTree(void * data , TreeLRTree * tree){
         }else{
             destroy_tree_node_LRTree(insertNode , tree);
             printf("key exists , insert fail\n");
-            break;
+            return;
         }
     }
     while((node = check_balance_LRTree(tree)) != NULL){
@@ -354,6 +354,9 @@ ArrayList * getTreeAllDatasLeftToRightLRTree(TreeLRTree * tree){
 }
 
 void destroy_tree_nodes_LRTree(TreeNodeLRTree * node , TreeLRTree * tree){
+    if(node == NULL){
+        return;
+    }
     ArrayList * listNode = get_tree_datas_left_to_right_LRTree(node , get_node_from_node_LRtree);
     int size = getSizeAList(listNode);
     for(int i = 0 ; i < size ; i++){
@@ -485,7 +488,7 @@ int isEmptyLRTree(TreeLRTree * tree){
     return tree->root == NULL;
 }
 
-void deleteElementLRTree(void * key , TreeLRTree * tree){
+void* deleteElementLRTree(void * key , TreeLRTree * tree){
     if(key == NULL){
         printf("key is null , delete error");
         return;
@@ -499,7 +502,9 @@ void deleteElementLRTree(void * key , TreeLRTree * tree){
         printf("not find , delete fail\n");
         return;
     }
+    void * data = node->data;
     delete_node_from_tree_LRTree(node , tree);
+    return data;
 }
 
 void *popMinDataLRTree(TreeLRTree * tree){
