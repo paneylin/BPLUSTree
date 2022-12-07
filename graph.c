@@ -194,6 +194,9 @@ void destroyPathGraph(PathGraph * path){
 }
 
 void destroyDistanceGraph(DistanceGraph * distance){
+    if(distance == NULL){
+        return;
+    }
     for(int i = 0 ; i < distance->pathNum ; i++){
         destroyPathGraph(distance->path[i]);
     }
@@ -250,13 +253,16 @@ ArrayList *getSubGraphsGraph(VLinkGraph *graph){
             int targetStartP = get_target_point_relation_Graph(*souceP , map);
             add_point_VLinkGraph(subGraph);
             int relationNodeSize = getSizeAList(graph->adj[*souceP]);
+            //printf("%d , relationNodeSize = %d\n" , *souceP , relationNodeSize);
             for(int i = 0 ; i < relationNodeSize ; i ++){
                 NodeVlinkGraph * vlinkNode = getElementByIndexAList(i , graph->adj[*souceP]);
+                //printf("%d %d %d\n" , *souceP ,vlinkNode->u , vlinkNode->w);
                 int targetP = get_target_point_relation_Graph(vlinkNode->u , map);
                 if(targetP == -1){
                     gen_point_relation_map(vlinkNode->u , newTargetP ++ ,map);
                     targetP = newTargetP - 1;
                 }
+                //printf("%d %d %d\n" , *souceP ,vlinkNode->u , vlinkNode->w);
                 insert_edge_VLinkGraph(targetStartP , targetP , vlinkNode->w,subGraph);
                 if(getDataFromTreeLRTree(&vlinkNode->u , nodeTree)){
                     int *lastU = (int *)malloc(sizeof(int));

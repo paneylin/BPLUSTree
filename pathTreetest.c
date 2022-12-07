@@ -47,12 +47,13 @@ int main(){
     printf("graph create success\n");
     int start = rand()%num;
     int end = rand()%num;
-    DistanceGraph * distance = getShortestDistancePathTree(start , end , vGraph);
+    //DistanceGraph * distance = getShortestDistancePathTree(start , end , vGraph);
+    DistanceGraph * distance = getDiameterPathTreePathTree(vGraph);
     if(distance == NULL){
         printf("no path from %d to %d\n",start , end);
         return;
     }
-    printf("start:%d end:%d , distance is %d\n",start , end , distance->distance);
+    printf("start:%d end:%d , distance is %d\n",distance->path[0]->v , distance->path[distance->pathNum -1]->u , distance->distance);
     //testDIstance(distance->distance , start , end , vGraph);
     printf("test success\n");
 }

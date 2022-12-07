@@ -116,6 +116,10 @@ PathTree *create_path_tree_PathTree(int start ,int  vNum){
 }
 
 PathTree *gen_pathtree_PathTree(int start , VLinkGraph *graph){
+    if(start < 0 || start >= graph->v || graph->v <= 0){
+        printf("Error: start is out of range in gen_pathtree_PathTree\n");
+        return NULL;
+    }
     PathTree * tree = create_path_tree_PathTree(start , graph->v);
     CircleQueue *queue = createCircleQueue();
     pushCircleQueue(&start , queue);
@@ -137,6 +141,22 @@ PathTree *gen_pathtree_PathTree(int start , VLinkGraph *graph){
     return tree;
 }
 
+DistanceGraph *create_distance_by_node_PathTree(NodePathTree *node){
+    if(node == NULL){
+        printf("Error: node is null in create_distance_by_node_PathTree\n");
+        return NULL;
+    }
+    DistanceGraph *distance = createDistanceGraph(node->height ,node->distance);
+    int i = node->height - 1;
+    while(node->parent != NULL){
+        PathGraph *path = createPathGraph(node->parent->u ,node->u , node->distance - node->parent->distance);
+        distance->path[i] = path;
+        i--;
+        node = node->parent;
+    }
+    return distance;
+}
+
 DistanceGraph* getShortestDistancePathTree(int start , int end , VLinkGraph *graph){
     if(start < 0 || start >= graph->v || end < 0 || end >= graph->v){
         printf("Error: start or end is out of range in getShortestDistancePathTree\n");
@@ -147,14 +167,7 @@ DistanceGraph* getShortestDistancePathTree(int start , int end , VLinkGraph *gra
     if(endNode->distance == UNREACHABLE_GRAPH){
         return NULL;
     }
-    DistanceGraph *distance = createDistanceGraph(endNode->height ,endNode->distance);
-    int i = endNode->height - 1;
-    while(endNode->parent != NULL){
-        PathGraph *path = createPathGraph(endNode->parent->u ,endNode->u , endNode->distance - endNode->parent->distance);
-        distance->path[i] = path;
-        i--;
-        endNode = endNode->parent;
-    }
+    DistanceGraph *distance = create_distance_by_node_PathTree(endNode);
     destroyPathTree(pathTree);
     return distance;
 }
@@ -172,8 +185,12 @@ ArrayList *get_all_leaf_node_PathTree(PathTree *tree){
     return leafList;
 }
 
-DistanceGraph * get_longest_path_PathTree(PathTree *tree){
-    ArrayList *leafList = get_all_leaf_node_PathTree(tree);
+DistanceGraph * get_longest_path_PathTree(PathTree *pathTree){
+    if(pathTree == NULL){
+        printf("pathtree is none , no logest path in get_longest_path_PathTree\n");
+        return NULL;
+    }
+    ArrayList *leafList = get_all_leaf_node_PathTree(pathTree);
     int size = getSizeAList(leafList);
     int maxDistance = 0;
     int maxIndex = 0;
@@ -185,34 +202,33 @@ DistanceGraph * get_longest_path_PathTree(PathTree *tree){
         }
     }
     NodePathTree *node = getElementByIndexAList(maxIndex , leafList);
-    DistanceGraph *distance = createDistanceGraph(node->height ,node->distance);
-    int i = node->height - 1;
-    while(node->parent != NULL){
-        PathGraph *path = createPathGraph(node->parent->u ,node->u , node->distance - node->parent->distance);
-        distance->path[i] = path;
-        i--;
-        node = node->parent;
-    }
-    destroyArrayListAList(leafList);
+    DistanceGraph *distance = create_distance_by_node_PathTree(node);
+    destroyAList(leafList);
     return distance;
 }
 
 DistanceGraph *get_Sub_Graph_Diameter_PathTree(VLinkGraph *subGraph){
+    if(subGraph == NULL || subGraph->v <= 0){
+        printf("Error: subGraph is null in get_Sub_Graph_Diameter_PathTree\n");
+        return NULL;
+    }
     PathTree *pathTree = gen_pathtree_PathTree(0 , subGraph);
-    DistanceGraph * rsl = get_longest_path_PathTree(pathTree);
     ArrayList *leafList = get_all_leaf_node_PathTree(pathTree);
+    DistanceGraph * rsl = get_longest_path_PathTree(pathTree);
     int size = getSizeAList(leafList);
-    destroyPathTree(pathTree);
     for(int i = 0 ; i < size ; i++){
         NodePathTree *node = getElementByIndexAList(i , leafList);
-        pathTree = gen_pathtree_PathTree(node->u , subGraph);
-        DistanceGraph * tempRsl = get_longest_path_PathTree(pathTree);
+        PathTree *leafPathTree = gen_pathtree_PathTree(node->u , subGraph);
+        DistanceGraph * tempRsl = get_longest_path_PathTree(leafPathTree);
         if(tempRsl->distance > rsl->distance){
             destroyDistanceGraph(rsl);
             rsl = tempRsl;
+        }else{
+            destroyDistanceGraph(tempRsl);
         }
-        destroyPathTree(pathTree);
+        destroyPathTree(leafPathTree);
     }
+    destroyPathTree(pathTree);
     return rsl;
 }
 
@@ -221,13 +237,15 @@ DistanceGraph *getDiameterPathTreePathTree(VLinkGraph * graph){
     DistanceGraph * rsl = NULL;
     int size = getSizeAList(subGraphs);
     for(int i = 0 ; i < size ; i ++){
+        printf("i = %d , size = %d\n",i , size);
         VLinkGraph *subGraph = getElementByIndexAList(i , subGraphs);
         DistanceGraph *tempRsl = get_Sub_Graph_Diameter_PathTree(subGraph);
         if(rsl == NULL || tempRsl->distance > rsl->distance){
             destroyDistanceGraph(rsl);
             rsl = tempRsl;
+        }else{
+            destroyDistanceGraph(tempRsl);
         }
-        destroyVlinkGraph(subGraph);
     }
     setFreeDataFuncAList(destroyVlinkGraph , subGraphs);
     destroyAList(subGraphs);
