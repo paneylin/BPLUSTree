@@ -5,6 +5,10 @@ int isEmptyCircleQueue(CircleQueue *queue){
     return queue == NULL || queue->tail == queue->head;
 }
 
+void setFreeDataFuncCircleQueue(void (*freeDataFunc)(void *data) , CircleQueue *queue){
+    queue->freeDataFunc = freeDataFunc;
+}
+
 void showCirCleQueue(CircleQueue *circleQueue , void (*showFunc)(void *data)){
     printf("queue size is : %d , tail is %d , head is %d ,data is:\n", circleQueue->size ,circleQueue->tail , circleQueue->head);
     printf("data size is %d : ",sizeof(circleQueue->data));
@@ -28,6 +32,7 @@ CircleQueue *createCircleQueue(){
     queue->data = (void **)malloc(sizeof(void *) * IINIT_SIZE_CIRCLE_QUEUE);
     queue->size = IINIT_SIZE_CIRCLE_QUEUE;
     queue->head = queue->tail = 0;
+    queue->freeDataFunc = NULL;
     return queue;
 }
 
@@ -74,21 +79,22 @@ void *popCircleQueue(CircleQueue *queue){
     return data;
 }
 
-void destroyCircleQueueQ(CircleQueue *queue){
+void destroyCircleQueue(CircleQueue *queue){
     if(queue == NULL){
         printf("error ,queue is empty\n");
         return;
     }
-    for(int i = 0 ; i < queue->size ; i++){
-        queue->data[i] = NULL;
+    while(queue->head != queue->tail){
+        if(queue->freeDataFunc != NULL){
+            queue->freeDataFunc(queue->data[queue->head]);
+        }
+        queue->data[queue->head] = NULL;
+        queue->head = (queue->head + 1) % queue->size;
     }
     free(queue->data);
-    queue = NULL;
+    queue->data = NULL;
     free(queue);
-}
-
-void destroyCircleQueue(CircleQueue *queue){
-    destroyCircleQueueQ(queue);
+    queue = NULL;
 }
 
 void clearCircleQueue(CircleQueue *queue){
