@@ -1,86 +1,94 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-//双向循环链表
-typedef struct Stack{
-    void *num;
-    struct stack *next;
-}Stack;
-
-typedef struct StackInfo{
-    Stack *head ,*tail;
-}StackInfo;
-
-StackInfo * create_stack_info(){
-    StackInfo *stack = (StackInfo *)malloc(sizeof(StackInfo));
-    stack->head = stack->tail = NULL;
-    return stack;
+StackNode * create_stack_node_Stack(void *data){
+    StackNode *node = (StackNode *)(malloc(sizeof(StackNode)));
+    node->data = data;
+    node->next = NULL;
 }
 
-StackInfo *stack = NULL;
+void destroy_stack_node_Stack(StackNode *node){
+    node ->next =NULL;
+    free(node);
+    node = NULL;
+}
 
-Stack *createStack(void *num){
+void setFreeDataFuncStack(void (*freeDataFunc)(void *data) , Stack *stack){
+    if(stack == NULL){
+        printf("stack is null , set free data func failed\n");
+        return;
+    }
+    stack->freeDataFunc = freeDataFunc;
+}
+
+Stack *createStackStack(){
     Stack *temp = (Stack *)malloc(sizeof(Stack));
-    temp->num = num;
-    temp->next = NULL;
+    temp->head = NULL;
+    temp->dataSize = 0;
+    temp->freeDataFunc = NULL;
     return temp;
 }
 
-void push(void *num){
+void pushStack(void *data , Stack *stack){
     if(stack == NULL){
-        stack = create_stack_info();
+        printf("stack is null , push failed\n");
+        return;
     }
-    Stack *temp = createStack(num);
+    StackNode *node = create_stack_node_Stack(data);
     if(stack->head == NULL){
-        stack->head = stack->tail = temp;
+        stack->head = node;
     }else{
-        temp->next = stack->head;
-        stack->head = temp;
+        node->next = stack->head;
+        stack->head = node;
     }
+    stack->dataSize ++;
 }
 
-void *pop(){
-    if(stack == NULL || stack->head == NULL){
+int isEmptyStack(Stack *stack){
+    if(stack == NULL){
+        printf("statkc is null\n");
+        return 1;
+    }
+    return stack->head == NULL;
+}
+
+void *popStack(Stack *stack){
+    if(isEmptyStack(stack)){
         printf("stack is empty\n");
         return NULL;
     }
-    Stack *temp = stack->head;
+    StackNode *node = stack->head;
+    void *data = node ->data;
     stack->head = stack->head->next;
-    if(stack->head == NULL){
-        stack->tail = NULL;
-    }
-    int rsl = temp->num;
-    free(temp);
-    return rsl;
+    destroy_stack_node_Stack(node);
+    return data;
 }
 
-void destroyStack(){
-    while(stack->head != NULL){
-        Stack *temp = stack->head;
-        stack->head = stack->head->next;
-        free(temp);
+void destroyStack(Stack *stack){
+    if(stack == NULL){
+        return;
     }
-    stack->head = stack->tail = NULL;
+    while(stack->head != NULL){
+        StackNode *temp = stack->head;
+        if(stack->freeDataFunc != NULL){
+            stack->freeDataFunc(temp->data);
+        }
+        stack->head = stack->head->next;
+        destroy_stack_node_Stack(temp);
+    }
+    stack->freeDataFunc = NULL;
     free(stack);
     stack = NULL;
 }
 
-int main()
-{
-    int temp = 0;
-    push(1);
-    push(2);
-    push(3);
-    temp = pop();
-    printf("%d\n",temp);
-    push(4);
-    push(5);
-    while (temp != NULL)
-    {
-        temp = pop();
-        printf("%d\n",temp);
+int validDataExistStack(void *data , int (*compareFunc)(void * data1 , void *data2) , Stack *stack){
+    if(isEmptyStack(stack)){
+        printf("stack is null , data not exist\n");
+        return 0;
     }
-    
-    destroyStack();
-    return 0;   
+    StackNode *node = stack->head;
+    while(node != NULL){
+        if(compareFunc(node->data,data) == 0){
+            return 1;
+        }
+        node = node->next;
+    }
+    return 0;
 }
