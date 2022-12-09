@@ -108,7 +108,7 @@ int main(){
     }
     //showVLinkGraph(vGraph);
     printf("graph create success\n");
-    ArrayList *subGraph = getSubGraphsGraph(vGraph);
+    ArrayList *subGraph = getSubGraphGraph(vGraph);
     //showVLinkGraph(vGraph);
     printf("subFraphs create success\n");
     testSubGraph(vGraph , subGraph);

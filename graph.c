@@ -22,6 +22,25 @@ void destroy_node_vlink_graph(NodeVlinkGraph * node){
     node = NULL;
 }
 
+void destroyVlinkGraph(VLinkGraph * graph){
+    if(graph == NULL){
+        return;
+    }
+    if(graph->adj != NULL){
+        for(int i = 0 ; i < graph->v ; i ++){
+            if(graph->adj[i] != NULL){
+                setFreeDataFuncAList(destroy_node_vlink_graph,graph->adj[i]);
+                destroyAList(graph->adj[i]);
+                graph->adj[i] = NULL;
+            }
+        }
+        free(graph->adj);
+        graph->adj = NULL;
+    }
+    free(graph);
+    graph = NULL;   
+}
+
 VLinkGraph * createVLinkGraph(int v){
     VLinkGraph * graph = (VLinkGraph *)malloc(sizeof(VLinkGraph));
     graph->v = v;
@@ -206,29 +225,60 @@ void destroyDistanceGraph(DistanceGraph * distance){
     distance = NULL;
 }
 
-PointRelation * ceate_point_relation_Graph(int sourceP , int targetP){
+PointRelation * ceate_point_relation_Graph(int sourceP , int targetP , int graphNo){
     PointRelation *rsl = (PointRelation*)malloc(sizeof(PointRelation));
     rsl->sourceP = sourceP;
     rsl->targetP = targetP;
+    rsl->targetGraphNum = graphNo;
     return rsl;
 }
 
-void gen_point_relation_map(int sourceP , int targetP , HashTable * table){
-    PointRelation * pRelation = ceate_point_relation_Graph(sourceP , targetP);
+void destory_point_relation_Graph(PointRelation * pRelation){
+    free(pRelation);
+    pRelation = NULL;
+}
+
+PointRelation *gen_point_relation_map(int sourceP , int targetP , int graphNo , HashTable * table){
+    PointRelation * pRelation = ceate_point_relation_Graph(sourceP , targetP , graphNo);
     insertElementHTable(pRelation , table);
+    return pRelation;
 }
 
-int get_target_point_relation_Graph(int sourceP , HashTable * table){
+PointRelation *get_target_point_relation_Graph(int sourceP , HashTable * table){
     PointRelation * pRelation =  getElementsHTable(&sourceP , table);
-    if(pRelation == NULL){
-        return -1;
-    }else{
-        return pRelation->targetP;
-    }
-
+    return pRelation;
 }
 
-ArrayList *getSubGraphsGraph(VLinkGraph *graph){
+VLinkGraph *mergeTwoGraph(VLinkGraph * graph1 , VLinkGraph * graph2){
+    if(graph1 == NULL || graph2 == NULL){
+        printf("graph is null , failed\n");
+        return NULL;
+    }
+    VLinkGraph * newGraph = createVLinkGraph(graph1->v + graph2->v);
+    for(int i = 0 ; i < graph1->v ; i++){
+        newGraph->adj[i] = graph1->adj[i];
+    }
+    for(int i = 0 ; i < graph2->v ; i++){
+        newGraph->adj[i + graph1->v] = graph2->adj[i];
+    }
+    newGraph->e = graph1->e + graph2->e;
+    free(graph1->adj);
+    free(graph1);
+    free(graph2->adj);
+    free(graph2);
+    return newGraph;
+}
+
+void update_point_relation_map_Graph(int sourceGraphNo , int targetGraphNo , HashTable * table){
+    for(int i = 0 ; i < table->tableSize ; i++){
+        PointRelation * pRelation = getElementsHTable(&i , table);
+        if(pRelation != NULL && pRelation->targetGraphNum == sourceGraphNo){
+            pRelation->targetGraphNum = targetGraphNo;
+        }
+    }
+}
+
+ArrayList *getSubGraphGraph(VLinkGraph * graph){
     ArrayList *subGraphs = createArrayListAList(NULL);
     HashTable *map = createHashTable(graph->v , get_source_p_for_key , NULL , hash_source_p_for_key);
     setHashFactorHTable(1 , map);
@@ -240,66 +290,101 @@ ArrayList *getSubGraphsGraph(VLinkGraph *graph){
         insertDataLRTree(j , nodeTree);
     }
     CircleQueue *queue = createCircleQueue(NULL);
+    int graphNo = 0;
     while(!isEmptyLRTree(nodeTree)){
         VLinkGraph * subGraph = createVLinkGraph(0);
         insertElementAList(subGraph , subGraphs);
         int newTargetP = 0;
         int *souceP = (int *)popMinDataLRTree(nodeTree);
-        gen_point_relation_map(*souceP , newTargetP++ , map);
-        pushCircleQueue(souceP , queue);
-        //printf("%d " , *souceP);
+        PointRelation * point = gen_point_relation_map(*souceP , newTargetP++ , graphNo , map);
+        freeInteger(souceP);
+        pushCircleQueue(point , queue);
         while(!isEmptyCircleQueue(queue)){
-            souceP = popCircleQueue(queue);
-            int targetStartP = get_target_point_relation_Graph(*souceP , map);
+            point = popCircleQueue(queue);
             add_point_VLinkGraph(subGraph);
-            int relationNodeSize = getSizeAList(graph->adj[*souceP]);
-            //printf("%d , relationNodeSize = %d\n" , *souceP , relationNodeSize);
+            int relationNodeSize = getSizeAList(graph->adj[point->sourceP]);
+            ArrayList *joinList = createArrayListAList(NULL);
             for(int i = 0 ; i < relationNodeSize ; i ++){
-                NodeVlinkGraph * vlinkNode = getElementByIndexAList(i , graph->adj[*souceP]);
-                //printf("%d %d %d\n" , *souceP ,vlinkNode->u , vlinkNode->w);
-                int targetP = get_target_point_relation_Graph(vlinkNode->u , map);
-                if(targetP == -1){
-                    gen_point_relation_map(vlinkNode->u , newTargetP ++ ,map);
-                    targetP = newTargetP - 1;
-                }
-                //printf("%d %d %d\n" , *souceP ,vlinkNode->u , vlinkNode->w);
-                insert_edge_VLinkGraph(targetStartP , targetP , vlinkNode->w,subGraph);
-                if(getDataFromTreeLRTree(&vlinkNode->u , nodeTree)){
-                    int *lastU = (int *)malloc(sizeof(int));
-                    *lastU = vlinkNode->u;
-                    pushCircleQueue(lastU , queue);
+                NodeVlinkGraph * vlinkNode = getElementByIndexAList(i , graph->adj[point->sourceP]);
+                PointRelation *pointU = get_target_point_relation_Graph(vlinkNode->u , map);
+                if(pointU == NULL){
+                    pointU = gen_point_relation_map(vlinkNode->u , newTargetP ++, graphNo ,map);
+                    pushCircleQueue(pointU , queue);
                     int * freeData = (int *)deleteElementLRTree(&vlinkNode->u , nodeTree);
                     free(freeData);
+                }else{
+                    if(pointU->targetGraphNum != graphNo && !isExistElementAList(&pointU->targetGraphNum , joinList)){
+                        insertElementAList(&pointU->targetGraphNum , joinList);
+                    }
                 }
-                //printf("%d %d %d\n" , *souceP ,vlinkNode->u , vlinkNode->w);
+                insert_edge_VLinkGraph(point->targetP , pointU->targetP , vlinkNode->w , subGraph);
             }
-            free(souceP);
+            while(!isEmptyAList(joinList)){
+                int *joinGraphNo = (int *)deleteElementByIndexAList(0 , joinList);
+                printf("join graph %d , graphNo is %d\n" , *joinGraphNo , graphNo);
+                VLinkGraph *joinGraph = replaceElementByIndexAList(*joinGraphNo , NULL , subGraphs);
+                subGraph = mergeTwoGraph(subGraph , joinGraph);
+                replaceElementByIndexAList(graphNo , subGraph , subGraphs);
+                update_point_relation_map_Graph(*joinGraphNo , graphNo , map);
+            }
         }
-        //showVLinkGraph(graph);
-        //showVLinkGraph(subGraph);
+        graphNo ++;
     }
-    //showVLinkGraph(graph);
-    printf("\n1");
+    setFreeDataHTable(destory_point_relation_Graph , map);
+    destroyHTable(map);
+    destroyCircleQueue(queue);
+    destroyTreeLRTree(nodeTree);
+    for(int i = getSizeAList(subGraphs) - 1 ; i >= 0 ; i --){
+        if(getElementByIndexAList(i , subGraphs) == NULL){
+            deleteElementByIndexAList(i , subGraphs);
+        }
+    }
     return subGraphs;
 }
 
-void destroyVlinkGraph(VLinkGraph * graph){
-    if(graph == NULL){
-        return;
+ArrayList *getSubGraphsUnDirectGraph(VLinkGraph *graph){
+    ArrayList *subGraphs = createArrayListAList(NULL);
+    HashTable *map = createHashTable(graph->v , get_source_p_for_key , NULL , hash_source_p_for_key);
+    setHashFactorHTable(1 , map);
+    setBlockSizeHTable(graph->v , map);
+    TreeLRTree *nodeTree = createTreeLRTree(NULL , NULL);
+    for(int i = 0 ; i < graph->v ; i ++){
+        int *j = (int *)malloc(sizeof(int));
+        *j = i;
+        insertDataLRTree(j , nodeTree);
     }
-    if(graph->adj != NULL){
-        for(int i = 0 ; i < graph->v ; i ++){
-            if(graph->adj[i] != NULL){
-                setFreeDataFuncAList(destroy_node_vlink_graph,graph->adj[i]);
-                destroyAList(graph->adj[i]);
-                graph->adj[i] = NULL;
+    CircleQueue *queue = createCircleQueue(NULL);
+    int graphNo = 0;
+    while(!isEmptyLRTree(nodeTree)){
+        VLinkGraph * subGraph = createVLinkGraph(0);
+        insertElementAList(subGraph , subGraphs);
+        int newTargetP = 0;
+        int *souceP = (int *)popMinDataLRTree(nodeTree);
+        PointRelation * point = gen_point_relation_map(*souceP , newTargetP++ , graphNo , map);
+        freeInteger(souceP);
+        pushCircleQueue(point , queue);
+        while(!isEmptyCircleQueue(queue)){
+            point = popCircleQueue(queue);
+            add_point_VLinkGraph(subGraph);
+            int relationNodeSize = getSizeAList(graph->adj[point->sourceP]);
+            for(int i = 0 ; i < relationNodeSize ; i ++){
+                NodeVlinkGraph * vlinkNode = getElementByIndexAList(i , graph->adj[point->sourceP]);
+                PointRelation *pointU = get_target_point_relation_Graph(vlinkNode->u , map);
+                if(pointU == NULL){
+                    pointU = gen_point_relation_map(vlinkNode->u , newTargetP ++, graphNo ,map);
+                    pushCircleQueue(pointU , queue);
+                    int * freeData = (int *)deleteElementLRTree(&vlinkNode->u , nodeTree);
+                    free(freeData);
+                }
+                insert_edge_VLinkGraph(point->targetP , pointU->targetP , vlinkNode->w , subGraph);
             }
         }
-        free(graph->adj);
-        graph->adj = NULL;
     }
-    free(graph);
-    graph = NULL;   
+    setFreeDataHTable(destory_point_relation_Graph , map);
+    destroyHTable(map);
+    destroyCircleQueue(queue);
+    destroyTreeLRTree(nodeTree);
+    return subGraphs;
 }
 
 void destroyVMutrixGraph(VMutrixGraph * graph){
@@ -330,7 +415,91 @@ void showVLinkGraph(VLinkGraph *graph){
         int size = getSizeAList(graph->adj[i]);
         for(int j = 0 ; j < size ; j ++){
             NodeVlinkGraph *node = getElementByIndexAList(j , graph->adj[i]);
-            printf("%d %d %d\n" , i , node->u , node->w);
+            printf("v= %d d= %d w= %d\n" , i , node->u , node->w);
         }
     }
 }
+
+void freeInteger(int * p){
+    free(p);
+    p = NULL;
+}
+
+void isCircleUndirectGraph(VLinkGraph * graph){
+    TreeLRTree *nodeTree = createTreeLRTree(NULL , NULL);
+    for(int i = 0 ; i < graph->v ; i ++){
+        int *j = (int *)malloc(sizeof(int));
+        *j = i;
+        insertDataLRTree(j , nodeTree);
+    }
+    CircleQueue *queue = createCircleQueue(NULL);
+    while(!isEmptyLRTree(nodeTree)){
+        int *startP = (int *)popMinDataLRTree(nodeTree);
+        PathGraph * path = createPathGraph(-1 ,*startP ,UNREACHABLE_GRAPH);
+        free(startP);
+        pushCircleQueue(path , queue);
+        while(!isEmptyCircleQueue(queue)){
+            path = popCircleQueue(queue);
+            int relationNodeSize = getSizeAList(graph->adj[path->u]);
+            for(int i = 0 ; i < relationNodeSize ; i ++){
+                NodeVlinkGraph * vlinkNode = getElementByIndexAList(i , graph->adj[path->u]);
+                if(getDataFromTreeLRTree(&vlinkNode->u , nodeTree)){
+                    PathGraph *newPath = createPathGraph(path->u ,vlinkNode->u ,vlinkNode->w);
+                    pushCircleQueue(newPath , queue);
+                    int * freeData = (int *)deleteElementLRTree(&vlinkNode->u , nodeTree);
+                    free(freeData);
+                }else if(vlinkNode->u != path->v){
+                    setFreeDataFuncCircleQueue(destroyPathGraph , queue);
+                    destroyCircleQueue(queue);
+                    setFreeDataFuncLRTree(freeInteger , nodeTree);
+                    destroyTreeLRTree(nodeTree);
+                    return 1;
+                }
+            }
+            free(path);
+        }
+    }
+    return 0;
+}
+
+int compare_path_Graph(PathGraph *data1 , PathGraph * data2){
+    return data1->u - data2->u;
+}
+
+int isCircleDirectGraph(VLinkGraph *graph){
+    Stack *nodeStack = createStackStack();
+    TreeLRTree * nodeTree = createTreeLRTree(NULL , NULL);
+    for(int i = 0 ; i < graph->v ; i ++){
+        int *j = (int *)malloc(sizeof(int));
+        *j = i;
+        insertDataLRTree(j , nodeTree);
+    }
+    while(!isEmptyLRTree(nodeTree)){
+        int *startP = (int *)popMinDataLRTree(nodeTree);
+        PathGraph * path = createPathGraph(-1 ,*startP ,-1);
+        freeInteger(startP);
+        do{
+            int relationNodeSize = getSizeAList(graph->adj[path->u]);
+            if(path->w < relationNodeSize - 1){
+                path->w ++;
+                pushStack(path , nodeStack);
+                path = createPathGraph(path->u ,((NodeVlinkGraph *)getElementByIndexAList(path->w , graph->adj[path->u]))->u ,0);
+                if(validDataExistStack(path , nodeStack , compare_path_Graph)){
+                    setFreeDataFuncStack(destroyPathGraph , nodeStack);
+                    destroyStack(nodeStack);
+                    setFreeDataFuncLRTree(freeInteger , nodeTree);
+                    destroyTreeLRTree(nodeTree);
+                    return 1;
+                }
+                int *data = deleteElementLRTree(&path->u , nodeTree);
+                if(data != NULL){
+                    freeInteger(data);
+                }
+            }else{
+                path = popStack(nodeStack);
+            }
+        }while(path != NULL);
+    }
+    return 0;
+}
+
