@@ -19,39 +19,44 @@ int compareEDges(ArrayList * edges1 , ArrayList *edges2){
 
 int testGraphjoin(VLinkGraph * graph){
     TreeLRTree * tree = createTreeLRTree(NULL , NULL);
-    int start = 0;
-    insertDataLRTree(&start , tree);
     CircleQueue *queue = createCircleQueue(NULL);
-    pushCircleQueue(&start , queue);
-    while(!isEmptyCircleQueue(queue)){
-        int i = *(int *)popCircleQueue(queue);
-        int size = getSizeAList(graph->adj[i]);
-        //printf("v = %d , graph v is %d , size is %d\n" , i , graph->v , size);
-        for(int j = 0 ; j < size ; j ++){
-            NodeVlinkGraph * node = getElementByIndexAList(j , graph->adj[i]);
-            if(!getDataFromTreeLRTree(&node->u , tree)){
-                insertDataLRTree(&node->u , tree);
-                pushCircleQueue(&node->u , queue);
+    int min = -1;
+    insertDataLRTree(&min , tree);
+    int start = 0;
+    do{
+        insertDataLRTree(&start , tree);
+        pushCircleQueue(&start , queue);
+        while(!isEmptyCircleQueue(queue)){
+            int i = *(int *)popCircleQueue(queue);
+            int size = getSizeAList(graph->adj[i]);
+            //printf("v = %d , graph v is %d , size is %d\n" , i , graph->v , size);
+            for(int j = 0 ; j < size ; j ++){
+                NodeVlinkGraph * node = getElementByIndexAList(j , graph->adj[i]);
+                if(!getDataFromTreeLRTree(&node->u , tree)){
+                    insertDataLRTree(&node->u , tree);
+                    pushCircleQueue(&node->u , queue);
+                }
             }
         }
-    }
-    //printf("all v is in\n");
-    int i = 0;
-    while(!isEmptyLRTree(tree)){
-        int * data = (int *)popMinDataLRTree(tree);
-        if(*data == i ){
-            i ++;
-        }else{
-            printf("graph is not a connected graph , has node unconnnected\n");
+        int *joinPoint = (int *)popMinDataLRTree(tree);
+        if(*joinPoint >= start){
+            printf("graph is not a connected graph , second Graph not connected to firstGraph %d , %d\n" , *joinPoint , start);
             return 0;
         }
-    }
-    if(i != graph->v){
-        printf("graph is not a connected graph , has node unconnnected , %d , %d\n" , i , graph->v);
-        return 0;
-    }
+        for(int i = start ; i < *(int*)getMaxDataLRTree(tree) ; i ++){
+            if(!getDataFromTreeLRTree(&i , tree)){
+                printf("graph is not a connected graph , has node unconnnected , %d , %d\n" , i , graph->v);
+                return 0;
+            }
+        }
+        start = *(int*)getMaxDataLRTree(tree) + 1;
+        while(!isEmptyLRTree(tree)){
+            popMinDataLRTree(tree);
+        }
+    }while(start < graph->v);
     destroyCircleQueue(queue);
     destroyTreeLRTree(tree);
+    return 1;
 }
 
 int testSubGraph(VLinkGraph * graph , ArrayList * subGraphs){
