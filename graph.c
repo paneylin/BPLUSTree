@@ -17,6 +17,17 @@ NodeVlinkGraph *create_node_vlink_graph(int vIndex , int w){
     return node;
 }
 
+void freeInteger(int * p){
+    free(p);
+    p = NULL;
+}
+
+int parsePointToCommon(int * p){
+    int rsl = *p;
+    free(p);
+    return rsl;
+}
+
 void destroy_node_vlink_graph(NodeVlinkGraph * node){
     free(node);
     node = NULL;
@@ -314,6 +325,7 @@ ArrayList *getSubGraphGraph(VLinkGraph * graph){
                     free(freeData);
                 }else{
                     if(pointU->targetGraphNum != graphNo && !isExistElementAList(&pointU->targetGraphNum , joinList)){
+                        //printf("insert graph %d , graphNo is %d\n", pointU->targetGraphNum , graphNo);
                         insertElementAList(&pointU->targetGraphNum , joinList);
                     }
                 }
@@ -321,7 +333,7 @@ ArrayList *getSubGraphGraph(VLinkGraph * graph){
             }
             while(!isEmptyAList(joinList)){
                 int *joinGraphNo = (int *)deleteElementByIndexAList(0 , joinList);
-                printf("join graph %d , graphNo is %d\n" , *joinGraphNo , graphNo);
+                //printf("join graph %d , graphNo is %d\n" , *joinGraphNo , graphNo);
                 VLinkGraph *joinGraph = replaceElementByIndexAList(*joinGraphNo , NULL , subGraphs);
                 subGraph = mergeTwoGraph(subGraph , joinGraph);
                 replaceElementByIndexAList(graphNo , subGraph , subGraphs);
@@ -421,12 +433,7 @@ void showVLinkGraph(VLinkGraph *graph){
     }
 }
 
-void freeInteger(int * p){
-    free(p);
-    p = NULL;
-}
-
-void isCircleUndirectGraph(VLinkGraph * graph){
+int isCircleUndirectGraph(VLinkGraph * graph){
     TreeLRTree *nodeTree = createTreeLRTree(NULL , NULL);
     for(int i = 0 ; i < graph->v ; i ++){
         int *j = (int *)malloc(sizeof(int));
@@ -467,7 +474,7 @@ int compare_path_Graph(PathGraph *data1 , PathGraph * data2){
     return data1->u - data2->u;
 }
 
-int isCircleDirectGraph(VLinkGraph *graph){
+int isCircleGraph(VLinkGraph *graph){
     Stack *nodeStack = createStackStack();
     TreeLRTree * nodeTree = createTreeLRTree(NULL , NULL);
     for(int i = 0 ; i < graph->v ; i ++){
@@ -476,16 +483,17 @@ int isCircleDirectGraph(VLinkGraph *graph){
         insertDataLRTree(j , nodeTree);
     }
     while(!isEmptyLRTree(nodeTree)){
-        int *startP = (int *)popMinDataLRTree(nodeTree);
-        PathGraph * path = createPathGraph(-1 ,*startP ,-1);
-        freeInteger(startP);
+        int startP =  parsePointToCommon(popMinDataLRTree(nodeTree));
+        PathGraph * path = createPathGraph(-1 ,startP ,-1);
         do{
             int relationNodeSize = getSizeAList(graph->adj[path->u]);
             if(path->w < relationNodeSize - 1){
                 path->w ++;
                 pushStack(path , nodeStack);
-                path = createPathGraph(path->u ,((NodeVlinkGraph *)getElementByIndexAList(path->w , graph->adj[path->u]))->u ,0);
-                if(validDataExistStack(path , nodeStack , compare_path_Graph)){
+                path = createPathGraph(path->u ,((NodeVlinkGraph *)getElementByIndexAList(path->w , graph->adj[path->u]))->u ,-1);
+                //printf("path->u = %d path->v = %d" , path->u , path->v);
+                if(validDataExistStack(path , compare_path_Graph ,nodeStack)){
+                    destroyPathGraph(path);
                     setFreeDataFuncStack(destroyPathGraph , nodeStack);
                     destroyStack(nodeStack);
                     setFreeDataFuncLRTree(freeInteger , nodeTree);
@@ -497,6 +505,7 @@ int isCircleDirectGraph(VLinkGraph *graph){
                     freeInteger(data);
                 }
             }else{
+                destroyPathGraph(path);
                 path = popStack(nodeStack);
             }
         }while(path != NULL);

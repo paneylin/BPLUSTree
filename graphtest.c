@@ -104,7 +104,7 @@ int main(){
         if(v == u){
             continue;
         }
-        insertEdgeVLinkUnDirectGraph(v , u , weight , vGraph);
+        insertEdgeVLinkDirectGraph(v , u , weight , vGraph);
     }
     //showVLinkGraph(vGraph);
     printf("graph create success\n");
@@ -112,5 +112,7 @@ int main(){
     //showVLinkGraph(vGraph);
     printf("subFraphs create success\n");
     testSubGraph(vGraph , subGraph);
+    int rsl = isCircleGraph(vGraph);
+    printf("isCircle is %d\n" , rsl);
     printf("end\n");
 }

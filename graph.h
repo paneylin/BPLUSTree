@@ -66,6 +66,14 @@ ArrayList *getSubGraphGraph(VLinkGraph *graph);
 void destroyVlinkGraph(VLinkGraph *graph);
 //销毁图，并释放内存
 void destroyVMutrixGraph(VMutrixGraph *graph);
+//判断无向图是否循环
+int isCircleUndirectGraph(VLinkGraph * graph);
+//判断有向图是否循环
+int isCircleGraph(VLinkGraph *graph);
+//获取无向图连通子图
+ArrayList *getSubGraphsUnDirectGraph(VLinkGraph *graph);
+//获取有向图连通子图
+ArrayList *getSubGraphGraph(VLinkGraph * graph);
 
 #include"./graph.c"
 
