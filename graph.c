@@ -10,6 +10,11 @@ int compare_npde_vlink_Graph(NodeVlinkGraph * a, NodeVlinkGraph * b){
     return a->u == b->u;
 }
 
+int compare_integer_Graph(int * a, int * b){
+    printf("compare_integer_Graph:%d,%d\n",*a,*b);
+    return *a - *b;
+}
+
 NodeVlinkGraph *create_node_vlink_graph(int vIndex , int w){
     NodeVlinkGraph * node = (NodeVlinkGraph *)malloc(sizeof(NodeVlinkGraph));
     node->u = vIndex;
@@ -314,7 +319,7 @@ ArrayList *getSubGraphGraph(VLinkGraph * graph){
             point = popCircleQueue(queue);
             add_point_VLinkGraph(subGraph);
             int relationNodeSize = getSizeAList(graph->adj[point->sourceP]);
-            ArrayList *joinList = createArrayListAList(NULL);
+            ArrayList *joinList = createArrayListAList(compare_integer_Graph);
             for(int i = 0 ; i < relationNodeSize ; i ++){
                 NodeVlinkGraph * vlinkNode = getElementByIndexAList(i , graph->adj[point->sourceP]);
                 PointRelation *pointU = get_target_point_relation_Graph(vlinkNode->u , map);
