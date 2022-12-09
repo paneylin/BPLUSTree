@@ -21,6 +21,8 @@ ArrayList * createArrayListAList(int (*compareFunc)(void * data1, void *data2));
 void setFreeDataFuncAList(void (*freeDataFunc)(void * data), ArrayList * list);
 //插入节点
 void insertElementAList(void *data , ArrayList * list);
+//在指定index插入节点，指定的index必须小于等于list的结点数量
+void insertElementByIndexAList(int index , void *data , ArrayList * list);
 //批量添加元素到ArrayList
 void insertElementsAList(void **datas , int length , ArrayList * list);
 //添加一个ArrayList元素到另一个ArrayList,list1加入list2
@@ -47,6 +49,10 @@ void destroyAList(ArrayList * list);
 int getSizeAList(ArrayList * list);
 //显示列表所有数据
 void showAList(ArrayList * list , void (*showFunc)(void *data) );
+//list当中是否存在data
+int isExistElementAList(void *data , ArrayList * list);
+//用data值替换list指定index的值，原值返回
+void *replaceElementByIndexAList(int index , void *data , ArrayList * list);
 
 #include "./arrayList.c"
 #endif

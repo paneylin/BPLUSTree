@@ -160,3 +160,37 @@ void * getLastElementAList(ArrayList * list){
     }
     return list->data[list->currentSize - 1];
 }
+
+void insertElementByIndexAList(int index , void *data , ArrayList * list){
+    if(index > list->currentSize){
+        printf("index out of range , insertElementByIndexAList failed\n");
+        return;
+    }
+    if(list->currentSize == list->dataSize){
+        if(!resize_list_size_AList(list)){
+            return;
+        }
+    }
+    memmove(list->data + index + 1 , list->data + index , sizeof(void *) * (list->currentSize - index));
+    list->data[index] = data;
+    list->currentSize++;
+}
+
+int isExistElementAList(void * data , ArrayList * list){
+    for(int i = 0 ; i < list->currentSize ; i++){
+        if(list->compareFunc(list->data[i] , data)){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void *replaceElementByIndexAList(int index , void *data , ArrayList * list){
+    if(index >= list->currentSize){
+        printf("index out of range , replaceElementByIndexAList failed\n");
+        return NULL;
+    }
+    void * ret = list->data[index];
+    list->data[index] = data;
+    return ret;
+}
