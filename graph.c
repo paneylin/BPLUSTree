@@ -327,6 +327,7 @@ ArrayList *getSubGraphGraph(VLinkGraph * graph){
                 replaceElementByIndexAList(graphNo , subGraph , subGraphs);
                 update_point_relation_map_Graph(*joinGraphNo , graphNo , map);
             }
+            destroyAList(joinList);
         }
         graphNo ++;
     }
