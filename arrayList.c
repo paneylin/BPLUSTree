@@ -45,7 +45,7 @@ void insertElementAList(void *data , ArrayList * list){
 
 void * getElementAList(void * data , ArrayList * list){
     for(int i = 0 ; i < list->currentSize ; i++){
-        if(list->compareFunc(list->data[i] , data) == 0){
+        if(list->compareFunc(list->data[i] , data)){
             return list->data[i];
         }
     }
@@ -62,7 +62,7 @@ void * getElementByIndexAList(int index , ArrayList * list){
 
 void *deleteElementAList(void * data , ArrayList * list){
     for(int i = 0 ; i < list->currentSize ; i++){
-        if(list->compareFunc(list->data[i] , data) == 0){
+        if(list->compareFunc(list->data[i] , data)){
             void * ret = list->data[i];
             memmove(list->data + i , list->data + i + 1, sizeof(void *) * (list->currentSize - i - 1));
             list->currentSize--;
@@ -178,7 +178,7 @@ void insertElementByIndexAList(int index , void *data , ArrayList * list){
 
 int isExistElementAList(void * data , ArrayList * list){
     for(int i = 0 ; i < list->currentSize ; i++){
-        if(list->compareFunc(list->data[i] , data) == 0){
+        if(list->compareFunc(list->data[i] , data)){
             return 1;
         }
     }

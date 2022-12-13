@@ -11,8 +11,7 @@ int compare_npde_vlink_Graph(NodeVlinkGraph * a, NodeVlinkGraph * b){
 }
 
 int compare_integer_Graph(int * a, int * b){
-    printf("compare_integer_Graph:%d,%d\n",*a,*b);
-    return *a - *b;
+    return *a == *b;
 }
 
 NodeVlinkGraph *create_node_vlink_graph(int vIndex , int w){
@@ -93,7 +92,7 @@ void insertEdgeVLinkDirectGraph(int v , int u , int w , VLinkGraph * graph){
         return;
     }
     if(v < 0 || v >= graph->v || u < 0 || u >= graph->v){
-        printf("index out of range , insertEdgeVLinkDirectGraph failed\n");
+        printf("index out of range , insertEdgeVLinkDirectGraph failed %d %d %d\n" , v , u , graph->v);
         return;
     }
     insert_edge_VLinkGraph(v , u , w , graph);
@@ -272,27 +271,29 @@ VLinkGraph *mergeTwoGraph(VLinkGraph * graph1 , VLinkGraph * graph2 , int graphN
     }
     VLinkGraph * newGraph = createVLinkGraph(graph1->v + graph2->v);
     for(int i = 0 ; i < graph1->v ; i++){
-        destroyAList(newGraph->adj[i]);
-        newGraph->adj[i] = graph1->adj[i];
+        for(int j = 0 ; j < getSizeAList(graph1->adj[i]) ; j++){
+            NodeVlinkGraph * node = (NodeVlinkGraph *)getElementByIndexAList(j , graph1->adj[i]);
+            if(node->u < 0){
+                PointRelation * pRelation = get_target_point_relation_Graph(-node->u , table);
+                if(pRelation != NULL && pRelation->targetGraphNum == graphNo){
+                    printf("insert edge %d %d %d\n" , pRelation->targetP , graph1->v , node->w);
+                    insertEdgeVLinkDirectGraph(i , pRelation->targetP , node->w , newGraph);
+                }else{
+                    insert_edge_VLinkGraph(i , node->u , node->w , newGraph);
+                }
+            }else{
+                insertEdgeVLinkDirectGraph(i, node->u , node->w , newGraph);
+            }
+        }
     }
     for(int i = 0 ; i < graph2->v ; i++){
         for(int j = 0 ; j < getSizeAList(graph2->adj[i]) ; j++){
             NodeVlinkGraph * node = (NodeVlinkGraph *)getElementByIndexAList(j , graph2->adj[i]);
-            if(node->u < 0){
-                PointRelation * pRelation = get_target_point_relation_Graph(-node->u , table);
-                if(pRelation != NULL && pRelation->targetGraphNum == graphNo){
-                    insertEdgeVLinkDirectGraph(i + graph1->v , pRelation->targetP , node->w , newGraph);
-                }else{
-                    insert_edge_VLinkGraph(i + graph1->v , node->u , node->w , newGraph);
-                }
-            }else{
-                insertEdgeVLinkDirectGraph(i + graph1->v , node->u + graph1->v , node->w , newGraph);
-            }
+            insertEdgeVLinkDirectGraph(i + graph1->v , node->u + graph1->v , node->w , newGraph);
         }
     }
     newGraph->e = graph1->e + graph2->e;
-    free(graph1->adj);
-    free(graph1);
+    destroyVlinkGraph(graph1);
     destroyVlinkGraph(graph2);
     return newGraph;
 }
@@ -365,8 +366,8 @@ ArrayList *getSubGraphGraph(VLinkGraph * graph){
         while(!isEmptyAList(joinList)){
             int *joinGraphNo = (int *)deleteElementByIndexAList(0 , joinList);
             VLinkGraph *joinGraph = replaceElementByIndexAList(*joinGraphNo , NULL , subGraphs);
-            update_point_relation_targetP_Graph(joinGraph->v , graphNo , map);
-            subGraph = mergeTwoGraph(joinGraph , subGraph , *joinGraphNo , map);
+            update_point_relation_targetP_Graph(subGraph->v , *joinGraphNo , map);
+            subGraph = mergeTwoGraph( subGraph , joinGraph , *joinGraphNo , map);
             replaceElementByIndexAList(graphNo , subGraph , subGraphs);
             update_point_relation_graphNo_Graph(*joinGraphNo , graphNo , map);
         }
@@ -541,5 +542,10 @@ int isCircleGraph(VLinkGraph *graph){
         }while(path != NULL);
     }
     return 0;
+}
+
+int isConnectedGraph(VLinkGraph *graph){
+    ArrayList * subGraphs = getSubGraphGraph(graph);
+    return getSizeAList(subGraphs) == 1;
 }
 

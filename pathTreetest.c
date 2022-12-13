@@ -42,13 +42,15 @@ int main(){
         if(v == u){
             continue;
         }
+        printf("v:%d u:%d weight:%d\n",v,u,weight);
         insertEdgeVLinkUnDirectGraph(v , u , weight , vGraph);
+        printf("v:%d u:%d weight:%d\n",v,u,weight);
     }
     printf("graph create success\n");
     int start = rand()%num;
     int end = rand()%num;
     //DistanceGraph * distance = getShortestDistancePathTree(start , end , vGraph);
-    DistanceGraph * distance = getDiameterPathTreePathTree(vGraph);
+    DistanceGraph * distance = getDiameterPathTreeUndirectPathTree(vGraph);
     if(distance == NULL){
         printf("no path from %d to %d\n",start , end);
         return;

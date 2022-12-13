@@ -232,8 +232,8 @@ DistanceGraph *get_Sub_Graph_Diameter_PathTree(VLinkGraph *subGraph){
     return rsl;
 }
 
-DistanceGraph *getDiameterPathTreePathTree(VLinkGraph * graph){
-    ArrayList * subGraphs = getSubGraphsGraph(graph);
+DistanceGraph *getDiameterPathTreeUndirectPathTree(VLinkGraph * graph){
+    ArrayList * subGraphs = getSubGraphsUnDirectGraph(graph);
     DistanceGraph * rsl = NULL;
     int size = getSizeAList(subGraphs);
     for(int i = 0 ; i < size ; i ++){

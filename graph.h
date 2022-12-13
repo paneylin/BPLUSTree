@@ -74,6 +74,8 @@ int isCircleGraph(VLinkGraph *graph);
 ArrayList *getSubGraphsUnDirectGraph(VLinkGraph *graph);
 //获取有向图连通子图
 ArrayList *getSubGraphGraph(VLinkGraph * graph);
+//判断图是否连通
+int isConnectedGraph(VLinkGraph *graph);
 
 #include"./graph.c"
 

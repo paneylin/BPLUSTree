@@ -490,17 +490,17 @@ int isEmptyLRTree(TreeLRTree * tree){
 
 void* deleteElementLRTree(void * key , TreeLRTree * tree){
     if(key == NULL){
-        printf("key is null , delete error");
-        return;
+        printf("key is null , delete error\n");
+        return NULL;
     }
     if(isEmptyLRTree(tree)){
-        printf("not find , tree is null or empty , delete error");
-        return;
+        printf("not find , tree is null or empty , delete error\n");
+        return NULL;
     }
     TreeNodeLRTree * node = find_node_in_tree_LRTree(key ,tree->root , tree);
     if(node == NULL){
         printf("not find , delete fail\n");
-        return;
+        return NULL;
     }
     void * data = node->data;
     delete_node_from_tree_LRTree(node , tree);
@@ -509,8 +509,8 @@ void* deleteElementLRTree(void * key , TreeLRTree * tree){
 
 void *popMinDataLRTree(TreeLRTree * tree){
     if(isEmptyLRTree(tree)){
-        printf("not find , tree is null or empty , delete error");
-        return;
+        printf("not find , tree is null or empty , delete error\n");
+        return NULL;
     }
     TreeNodeLRTree * node = get_min_node_from_tree_LRTree(tree->root);
     void * data = node->data;
@@ -520,8 +520,8 @@ void *popMinDataLRTree(TreeLRTree * tree){
 
 void *popMaxDataLRTree(TreeLRTree * tree){
     if(isEmptyLRTree(tree)){
-        printf("not find , tree is null or empty , delete error");
-        return;
+        printf("not find , tree is null or empty , delete error\n");
+        return NULL;
     }
     TreeNodeLRTree * node = get_max_node_from_tree_LRTree(tree->root);
     void * data = node->data;
@@ -531,8 +531,8 @@ void *popMaxDataLRTree(TreeLRTree * tree){
 
 void *getMinDataLRTree(TreeLRTree * tree){
     if(isEmptyLRTree(tree)){
-        printf("not find , tree is null or empty , delete error");
-        return;
+        printf("not find , tree is null or empty , delete error\n");
+        return NULL;
     }
     TreeNodeLRTree * node = get_min_node_from_tree_LRTree(tree->root);
     return node->data;
@@ -540,8 +540,8 @@ void *getMinDataLRTree(TreeLRTree * tree){
 
 void * getMaxDataLRTree(TreeLRTree * tree){
     if(isEmptyLRTree(tree)){
-        printf("not find , tree is null or empty , delete error");
-        return;
+        printf("not find , tree is null or empty , delete error\n");
+        return NULL;
     }
     TreeNodeLRTree * node = get_max_node_from_tree_LRTree(tree->root);
     return node->data;
