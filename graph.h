@@ -6,6 +6,7 @@
 #include"./hashTable.h"
 #include"./CircleQueue.h"
 #include"./stack.h"
+#include"./memory.h"
 
 typedef struct VLinkGraph{
     int v;
@@ -39,8 +40,16 @@ typedef struct DistanceGraph{
 typedef struct PointRelation{
     int sourceP;
     int targetP;
-    int targetGraphNum;
+    ArrayList *targetPointList;
 }PointRelation;
+
+typedef struct  StronglyConnectedGraph{
+    int nodeNum;
+    int pathNum;
+    ArrayList *nodeList;
+    ArrayList **adj;
+}StronglyConnectedGraph;
+
 
 const int PATH_NOT_EXSIT_GRAPH = -1;
 const int UNREACHABLE_GRAPH = -1;
