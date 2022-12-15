@@ -58,3 +58,9 @@ void freeMemory(void *memory){
     deleteElementLRTree(memory , memoryTreeMemory);
 }
 
+int isMemoryAllFreeed(){
+    if(memoryTreeMemory == NULL){
+        return 1;
+    }
+    return memoryTreeMemory->root == NULL;
+}

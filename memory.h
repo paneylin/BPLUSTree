@@ -10,6 +10,8 @@ void *rellocMemory(void *memory , int size);
 //释放内存
 void freeMemory(void *memory);
 
+int isMemoryAllFreeed();
+
 #include "./memory.c"
 
 #endif
