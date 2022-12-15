@@ -53,6 +53,8 @@ void showAList(ArrayList * list , void (*showFunc)(void *data) );
 int isExistElementAList(void *data , ArrayList * list);
 //用data值替换list指定index的值，原值返回
 void *replaceElementByIndexAList(int index , void *data , ArrayList * list);
+//返回数据在list中的index，如果不存在返回-1
+int getDataIndexAList(void *data , ArrayList * list);
 
 #include "./arrayList.c"
 #endif

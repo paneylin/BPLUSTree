@@ -194,3 +194,16 @@ void *replaceElementByIndexAList(int index , void *data , ArrayList * list){
     list->data[index] = data;
     return ret;
 }
+
+int getDataIndexAList(void *data , ArrayList * list){
+    if(data == NULL){
+        printf("data is NULL , getDataIndexAList failed\n");
+        return -1;
+    }
+    for(int i = 0 ; i < list->currentSize ; i++){
+        if(list->compareFunc(list->data[i] , data)){
+            return i;
+        }
+    }
+    return -1;
+}
