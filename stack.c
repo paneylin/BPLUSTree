@@ -92,3 +92,29 @@ int validDataExistStack(void *data , int (*compareFunc)(void * data1 , void *dat
     }
     return 0;
 }
+
+void *getTopStack(Stack *stack){
+    if(isEmptyStack(stack)){
+        printf("stack is empty , get top failed\n");
+        return NULL;
+    }
+    return stack->head->data;
+}
+
+ArrayList *getAfterDataStack(void *data , int (*compareFunc)(void * data1 , void *data2) , Stack *stack){
+    if(isEmptyStack(stack)){
+        printf("stack is empty , get after data failed\n");
+        return NULL;
+    }
+    ArrayList *list = createArrayListAList(NULL);
+    StackNode *node = stack->head;
+    while(node != NULL){
+        if(compareFunc(node->data,data) == 0){
+            insertElementAList(node->data,list);
+            return list;
+        }
+        insertElementAList(node->data,list);
+        node = node->next;
+    }
+    return NULL;
+}

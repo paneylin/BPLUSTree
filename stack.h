@@ -1,10 +1,9 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-//双向循环链表
+#include"./memory.h"
+#include"./arrayList.h"
+
 typedef struct StackNode{
     void *data;
     struct StackNode *next;
@@ -29,6 +28,10 @@ void *popStack(Stack *stack);
 void destroyStack(Stack *stack);
 //判断stack中是否存在某个数据,compare值为0表示数值相同
 int validDataExistStack(void *data , int (*compareFunc)(void * data1 , void *data2) , Stack *stack);
+//获取栈顶数据但是不弹出
+void *getTopStack(Stack *stack);
+//获取data数据及其到栈顶数据之间的所有数据，但是不弹出，data数据不存在返回null
+ArrayList *getAfterDataStack(void *data , int (*compareFunc)(void * data1 , void *data2) , Stack *stack);
 
 #include"./stack.c"
 

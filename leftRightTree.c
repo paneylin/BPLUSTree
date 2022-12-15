@@ -302,8 +302,7 @@ void * getDataFromTreeLRTree(void * key , TreeLRTree * tree){
         printf("key is null , find error");
         return NULL;
     }
-    if(tree == NULL){
-        printf("not find , tree is null");
+    if(tree == NULL || tree->root == NULL){
         return NULL;
     }
     TreeNodeLRTree * node = find_node_in_tree_LRTree(key ,tree->root , tree);
