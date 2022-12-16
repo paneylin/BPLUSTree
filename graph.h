@@ -31,6 +31,13 @@ typedef struct PathGraph{
     int w;
 }PathGraph;
 
+typedef struct PathStronglyConnectedGraph{
+    int v;
+    int u;
+    int w;
+    int nodeIndex;
+}PathStronglyConnectedGraph;
+
 typedef struct DistanceGraph{
     PathGraph **path;
     int pathNum;
@@ -69,6 +76,12 @@ void insertEdgeVMutrixDirectGraph(int v , int u , int w , VMutrixGraph * graph);
 VMutrixGraph *changeLinktoMutrixGraph(VLinkGraph * graph);
 //将矩阵类型的图转为邻接表类型的图；
 VLinkGraph * changeMutrixtoLinkGraph(VMutrixGraph * graph);
+//获取图的转置图
+VLinkGraph *getRevertVLinkGraph(VLinkGraph * graph);
+//判断邻接图是否有向
+int validDirectVLinkGraph(VLinkGraph * graph);
+//判断矩阵图是否有向
+int validDirectVMutrixGraph(VMutrixGraph * graph);
 //将一个图分割成几个子图，子图之间互相不连通
 ArrayList *getSubGraphGraph(VLinkGraph *graph);
 //销毁图，并释放内存
@@ -79,12 +92,11 @@ void destroyVMutrixGraph(VMutrixGraph *graph);
 int isCircleUndirectGraph(VLinkGraph * graph);
 //判断有向图是否循环
 int isCircleGraph(VLinkGraph *graph);
-//获取无向图连通子图
-ArrayList *getSubGraphsUnDirectGraph(VLinkGraph *graph);
 //获取有向图连通子图
 ArrayList *getSubGraphGraph(VLinkGraph * graph);
 //判断图是否连通
 int isConnectedGraph(VLinkGraph *graph);
+
 
 #include"./graph.c"
 

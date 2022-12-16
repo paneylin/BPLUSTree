@@ -3,29 +3,37 @@
 int compareEDges(ArrayList * edges1 , ArrayList *edges2){
     int size = getSizeAList(edges1);
     if(size != getSizeAList(edges2)){
-        //printf("size is not equal\n");
         return 0;
     }
+    TreeLRTree *tree = createTreeLRTree(NULL , NULL);
     for(int i = 0 ; i < size ; i ++){
         NodeVlinkGraph * node1 = getElementByIndexAList(i , edges1);
+        //printf("node1->w = %d\n",node1->w);
+        insertDataLRTree(&node1->w , tree);
+    }
+    for(int i = 0 ; i < size ; i ++){
         NodeVlinkGraph * node2 = getElementByIndexAList(i , edges2);
-        if(node1->w != node2->w){
-            //printf("weight is not equal %d , %d ,%d , %d , size is %d\n" , node1->w , node1->u , node2->w ,node2->u, size);
+        int *data = deleteElementLRTree(&node2->w , tree);
+        if(data == NULL){
+            printf("not found = %d\n",node2->w);
+            destroyTreeLRTree(tree);
             return 0;
         }
     }
+    destroyTreeLRTree(tree);
     return 1;
 }
 
-int testGraphjoin(VLinkGraph * graph ,int start , int nextPoint){
+int testGraphjoin(VLinkGraph * graph){
+    VLinkGraph *revertGraph = getRevertVLinkGraph(graph);
     TreeLRTree * tree = createTreeLRTree(NULL , NULL);
     CircleQueue *queue = createCircleQueue(NULL);
+    int start = 0;
     insertDataLRTree(&start , tree);
     pushCircleQueue(&start , queue);
     while(!isEmptyCircleQueue(queue)){
         int i = *(int *)popCircleQueue(queue);
         int size = getSizeAList(graph->adj[i]);
-        //printf("v = %d , graph v is %d , size is %d\n" , i , graph->v , size);
         for(int j = 0 ; j < size ; j ++){
             NodeVlinkGraph * node = getElementByIndexAList(j , graph->adj[i]);
             if(!getDataFromTreeLRTree(&node->u , tree)){
@@ -33,30 +41,24 @@ int testGraphjoin(VLinkGraph * graph ,int start , int nextPoint){
                 pushCircleQueue(&node->u , queue);
             }
         }
-    }
-    int treeStart = *(int *)popMinDataLRTree(tree);
-    int treeEnd = treeStart;
-    while(!isEmptyLRTree(tree)){
-        int *temp = getMinDataLRTree(tree);
-        if(*temp == treeEnd + 1){
-            treeEnd = *temp;
-        }else{
-            break;
+        size = getSizeAList(revertGraph->adj[i]);
+        for(int j = 0 ; j < size ; j ++){
+            NodeVlinkGraph * node = getElementByIndexAList(j , revertGraph->adj[i]);
+            if(!getDataFromTreeLRTree(&node->u , tree)){
+                insertDataLRTree(&node->u , tree);
+                pushCircleQueue(&node->u , queue);
+            }
         }
-        popMinDataLRTree(tree);
     }
-    if(treeEnd == graph->v - 1){
-        return 1;
-    }
-    if(isEmptyLRTree(tree) && nextPoint < treeEnd){
-        printf("graph is not a connected graph , second Graph not connected to firstGraph%d %d %d\n" ,treeStart ,start , treeEnd);
+    if(getSizeLRTree(tree) != graph->v){
+        printf("graph is not a connected graph\n");
         return 0;
     }
-    int newNextPoint = popMaxDataLRTree(tree);
-    nextPoint = nextPoint > newNextPoint ? nextPoint : newNextPoint;
+    destroyVlinkGraph(revertGraph);
     destroyCircleQueue(queue);
+    setFreeDataFuncLRTree(freeInteger , tree);
     destroyTreeLRTree(tree);
-    return testGraphjoin(graph , treeEnd + 1 , nextPoint);
+    return 1;
 }
 
 int testSubGraph(VLinkGraph * graph , ArrayList * subGraphs){
@@ -68,7 +70,7 @@ int testSubGraph(VLinkGraph * graph , ArrayList * subGraphs){
         VLinkGraph * subgraph = getElementByIndexAList(i , subGraphs);
         v += subgraph->v;
         e += subgraph->e;
-        if(!testGraphjoin(subgraph , 0 , 0)){
+        if(!testGraphjoin(subgraph)){
             printf("subgraph %d is not a connected graph\n" , i);
             return 0;
         }
@@ -95,6 +97,104 @@ int testSubGraph(VLinkGraph * graph , ArrayList * subGraphs){
     return 1;
 }
 
+int testGraphStrongConnected(VLinkGraph *graph){
+    if(graph->v == 1){
+        return 1;
+    }
+    VLinkGraph * revertGraph = getRevertVLinkGraph(graph);
+    TreeLRTree *tree = createTreeLRTree(NULL , NULL);
+    CircleQueue *queue = createCircleQueue(NULL);
+    int start = 0;
+    insertDataLRTree(&start , tree);
+    pushCircleQueue(&start , queue);
+    while(!isEmptyCircleQueue(queue)){
+        int i = *(int *)popCircleQueue(queue);
+        int size = getSizeAList(graph->adj[i]);
+        for(int j = 0 ; j < size ; j ++){
+            NodeVlinkGraph * node = getElementByIndexAList(j , graph->adj[i]);
+            if(!getDataFromTreeLRTree(&node->u , tree)){
+                insertDataLRTree(&node->u , tree);
+                pushCircleQueue(&node->u , queue);
+            }
+        }
+    }
+    if(getSizeLRTree(tree) != graph->v){
+        printf("some node is not connected to start node\n");
+        return 0;
+    }
+    deleteElementLRTree(&start , tree);
+    pushCircleQueue(&start , queue);
+    while(!isEmptyCircleQueue(queue)){
+        int i = *(int *)popCircleQueue(queue);
+        int size = getSizeAList(revertGraph->adj[i]);
+        for(int j = 0 ; j < size ; j ++){
+            NodeVlinkGraph * node = getElementByIndexAList(j , revertGraph->adj[i]);
+            if(getDataFromTreeLRTree(&node->u , tree)){
+                deleteElementLRTree(&node->u , tree);
+                pushCircleQueue(&node->u , queue);
+            }
+        }
+    }
+    if(getSizeLRTree(tree) != 0){
+        printf("some node is not connected to end node\n");
+        return 0;
+    }
+    return 1;
+}
+
+int testStronglyConnectedGraph(StronglyConnectedGraph * sGraph , VLinkGraph * graph){
+    int size = sGraph->nodeNum;
+    printf("stronglyConnectedGraph num is %d\n" , size);
+    int v = 0;
+    int e = sGraph->pathNum;
+    for(int i = 0 ; i < size ; i ++){
+        VLinkGraph * subgraph = getElementByIndexAList(i , sGraph->nodeList);
+        //printf("subgraph %d %d\n" , graph->e , subgraph->e);
+        //showVLinkGraph(graph);
+        //showVLinkGraph(subgraph);
+        v += subgraph->v;
+        e += subgraph->e;
+        if(!testGraphStrongConnected(subgraph)){
+            printf("subgraph %d is not a strong connected graph\n" , i);
+            return 0;
+        }
+        printf("test subgraph %d\n" , i);
+        ArrayList * nodePathList = sGraph->adj[i];
+        for(int j = 0 ; j < subgraph->v ; j ++){
+            int flag = 0;
+            ArrayList * newList = createArrayListAList(NULL);
+            insertArrayListAList(subgraph->adj[j] , newList);
+            printf("newList size is %d , %d”\n" , getSizeAList(newList) , getSizeAList(subgraph->adj[j]));
+            for(int k = 0 ; k < getSizeAList(nodePathList) ; k ++){
+                PathStronglyConnectedGraph * nodePath = getElementByIndexAList(k , nodePathList);
+                //printf("nodePath  %d\n" , nodePath->v);
+                if(nodePath->v == j){
+                    NodeVlinkGraph * node = create_node_vlink_graph(nodePath->u , nodePath->w);
+                    insertElementAList(node, newList);
+                }
+            }
+            for(int k = 0 ; k < graph->v ; k ++){
+                printf("finding is %d\n" , k);
+                if(compareEDges(graph->adj[k] , newList)){
+                    printf("find %d\n" , k);
+                    flag = 1;
+                    break;  
+                }
+            }
+            if(!flag){
+                printf("sGraph is not a strong connected Graph of graph\n");
+                return 0;
+            }
+        }
+    }
+    if(graph->v != v || graph->e != e){
+        printf("sGraph is not a strong connected Graph of graph , v is %d , %d , e is %d , %d\n", graph->v , v , graph->e , e);
+        return 0;
+    }
+    printf("subgraph is a strong connected Graph of graph\n");
+    return 1;
+}
+
 int main(){
     int num = 10;
     scanf("%d",&num);
@@ -111,13 +211,15 @@ int main(){
         }
         insertEdgeVLinkDirectGraph(v , u , weight , vGraph);
     }
-    //showVLinkGraph(vGraph);
-    printf("graph create success\n");
+    /*printf("graph create success\n");
     ArrayList *subGraph = getSubGraphGraph(vGraph);
-    //showVLinkGraph(vGraph);
     printf("subFraphs create success\n");
     testSubGraph(vGraph , subGraph);
     int rsl = isCircleGraph(vGraph);
-    printf("isCircle is %d\n" , rsl);
+    printf("isCircle is %d\n" , rsl);*/
+    //showVLinkGraph(vGraph);
+    StronglyConnectedGraph * sGraph = getStronglyConnectedGraph(vGraph);
+    printf("stronglyConnectedGraph create success\n");
+    testStronglyConnectedGraph(sGraph , vGraph);
     printf("end\n");
 }
