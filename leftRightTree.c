@@ -299,7 +299,7 @@ TreeNodeLRTree * find_node_in_tree_LRTree(void * key , TreeNodeLRTree * node ,Tr
 
 void * getDataFromTreeLRTree(void * key , TreeLRTree * tree){
     if(key == NULL){
-        printf("key is null , find error");
+        printf("key is null , find error\n");
         return NULL;
     }
     if(tree == NULL || tree->root == NULL){
@@ -312,12 +312,27 @@ void * getDataFromTreeLRTree(void * key , TreeLRTree * tree){
     return node->data;
 }
 
+void showTreeFunc_LRTree(TreeNodeLRTree * node , void (*opFunc)(void * , void *)){
+    opFunc(node->key , node->data);
+    printf(" size is %d" , node->size);
+    if(node->left != NULL){
+        printf("left: ");
+        opFunc(node->left->key , node->left->data);
+    }
+    if(node->right != NULL){
+        printf("right: ");
+        opFunc(node->right->key , node->right->data);
+    }
+    printf("\n ");
+}
+
+
 void search_order_middle_op_LRTree(TreeNodeLRTree * node , void (*opFunc)(void * , void *)){
     TreeNodeLRTree *preOp = NULL;
     TreeNodeLRTree *currentOP = node;
     while(currentOP != NULL){
         if(preOp == NULL || currentOP->parent == preOp){
-            opFunc(currentOP->key , currentOP->data);
+            showTreeFunc_LRTree(currentOP ,opFunc);
             preOp = currentOP;
             if(currentOP->left != NULL || currentOP->right != NULL){
                 currentOP = currentOP->left == NULL ? currentOP->right :currentOP->left;
@@ -481,7 +496,7 @@ void delete_node_from_tree_LRTree(TreeNodeLRTree * node , TreeLRTree * tree){
 
 int isEmptyLRTree(TreeLRTree * tree){
     if(tree == NULL){
-        printf("tree is null , isEmptyLRTree error\n");
+        printf("tree is null\n");
         return 1;
     }
     return tree->root == NULL;
@@ -493,12 +508,10 @@ void* deleteElementLRTree(void * key , TreeLRTree * tree){
         return NULL;
     }
     if(isEmptyLRTree(tree)){
-        printf("not find , tree is null or empty , delete error\n");
         return NULL;
     }
     TreeNodeLRTree * node = find_node_in_tree_LRTree(key ,tree->root , tree);
     if(node == NULL){
-        printf("not find , delete fail\n");
         return NULL;
     }
     void * data = node->data;
@@ -544,4 +557,11 @@ void * getMaxDataLRTree(TreeLRTree * tree){
     }
     TreeNodeLRTree * node = get_max_node_from_tree_LRTree(tree->root);
     return node->data;
+}
+
+int getSizeLRTree(TreeLRTree * tree){
+    if(isEmptyLRTree(tree)){
+        return 0;
+    }
+    return tree->root->size;
 }

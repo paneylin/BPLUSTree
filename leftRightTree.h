@@ -57,6 +57,8 @@ void *popMaxDataLRTree(TreeLRTree * tree);
 void * getMinDataLRTree(TreeLRTree * tree);
 //获取树中key最小的数据
 void * getMaxDataLRTree(TreeLRTree * tree);
+//获取树的节点数量
+int getSizeLRTree(TreeLRTree * tree);
 
 #include "./LeftRightTree.c"
 
