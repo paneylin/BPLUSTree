@@ -46,12 +46,15 @@ void *rellocMemory(void *memory , int size){
 }
 
 void freeMemory(void *memory){
+    if(memory == NULL){
+        return;
+    }
     if(memoryTreeMemory == NULL){
-        printf("try to free memory but memoryTreeMemory is NULL\n");
+        //printf("try to free memory but memoryTreeMemory is NULL\n");
         return ;
     }
     if(getDataFromTreeLRTree(memory , memoryTreeMemory) == NULL){
-        printf("try to free memory but memory is not in memoryTreeMemory\n");
+        //printf("try to free memory but memory is not in memoryTreeMemory\n");
         return ;
     }
     free(memory);
