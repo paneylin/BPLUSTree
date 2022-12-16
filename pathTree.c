@@ -141,6 +141,15 @@ PathTree *gen_pathtree_PathTree(int start , VLinkGraph *graph){
     return tree;
 }
 
+PathTree *gen_pathtree_prim_PathTree(int start , VLinkGraph *graph){
+    if(start < 0 || start >= graph->v || graph->v <= 0){
+        printf("Error: start is out of range in gen_pathtree_prim_PathTree\n");
+        return NULL;
+    }
+    PathTree * tree = create_path_tree_PathTree(start , graph->v);
+    
+}
+
 DistanceGraph *create_distance_by_node_PathTree(NodePathTree *node){
     if(node == NULL){
         printf("Error: node is null in create_distance_by_node_PathTree\n");
