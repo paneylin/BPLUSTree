@@ -143,6 +143,7 @@ void insertArrayListAList(ArrayList *list1 , ArrayList *list2){
         }
     }
     memmove(list2->data + list2->currentSize , list1->data , sizeof(void *) * list1->currentSize);
+    list2->currentSize += list1->currentSize;
 }
 
 void * getFirstElementAList(ArrayList * list){
