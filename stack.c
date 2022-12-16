@@ -51,7 +51,6 @@ int isEmptyStack(Stack *stack){
 
 void *popStack(Stack *stack){
     if(isEmptyStack(stack)){
-        printf("stack is empty\n");
         return NULL;
     }
     StackNode *node = stack->head;
@@ -95,7 +94,6 @@ int validDataExistStack(void *data , int (*compareFunc)(void * data1 , void *dat
 
 void *getTopStack(Stack *stack){
     if(isEmptyStack(stack)){
-        printf("stack is empty , get top failed\n");
         return NULL;
     }
     return stack->head->data;
@@ -103,7 +101,6 @@ void *getTopStack(Stack *stack){
 
 ArrayList *getAfterDataStack(void *data , int (*compareFunc)(void * data1 , void *data2) , Stack *stack){
     if(isEmptyStack(stack)){
-        printf("stack is empty , get after data failed\n");
         return NULL;
     }
     ArrayList *list = createArrayListAList(NULL);
