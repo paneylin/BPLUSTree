@@ -267,6 +267,19 @@ NodeDFSTreeGraph *create_node_DFS_tree_Graph(int v){
     return node;
 }
 
+void destroy_node_DFS_tree_Graph(NodeDFSTreeGraph * node){
+    if(node == NULL){
+        return;
+    }
+    if(node->adjNodeList != NULL){
+        destroyAList(node->adjNodeList);
+        node->adjNodeList = NULL;
+    }
+    node->child = node->parent = node->next = node->pre = NULL;
+    freeMemory(node);
+    node = NULL;
+}
+
 DFSTreeGraph *create_DFS_tree_Graph(int v){
     DFSTreeGraph * tree = (DFSTreeGraph *)mallocMemory(sizeof(DFSTreeGraph));
     tree->treeRoots = createArrayListAList(NULL);
@@ -308,7 +321,6 @@ int get_next_visit_index_DFS_tree_Graph(NodeDFSTreeGraph * node){
         NodeDFSTreeGraph * searchNode = getElementByIndexAList(i , node->adjNodeList);
         if(searchNode->leftIndex == 0){
             deleteElementByIndexAList(i , node->adjNodeList);
-            printf("new child %d , pNode %d , search index %d , new adjSize %d\n" , searchNode->v , node->v , i , --adjSize);
             node->visitIndex = i;
             return searchNode->v;
         }else if(searchNode->rightIndex != 0 && searchNode->rightIndex > node->leftIndex){
@@ -318,12 +330,6 @@ int get_next_visit_index_DFS_tree_Graph(NodeDFSTreeGraph * node){
         }
     }
     node->visitIndex = getSizeAList(node->adjNodeList);
-    /*printf("pNode %d , preIndex size is %d , preNode index is " , node->v , node->visitIndex);
-    for(int i = 0 ; i < node->visitIndex ; i ++){
-        NodeDFSTreeGraph * searchNode = getElementByIndexAList(i , node->adjNodeList);
-        printf("%d " , searchNode->v);
-    }
-    printf("\n");*/
     return -1;
 }
 
@@ -387,7 +393,33 @@ DFSTreeGraph *getDFSTreeGraph(VLinkGraph * graph){
     return tree;
 }
 
+void destroyDFSTreeGraph(DFSTreeGraph * tree){
+    if(tree == NULL){
+        return;
+    }
+    if(tree->nodeList != NULL){
+        setFreeDataFuncAList(destroy_node_DFS_tree_Graph , tree->nodeList);
+        destroyAList(tree->nodeList);
+    }
+    destroyAList(tree->treeRoots);
+    freeMemory(tree);
+    tree = NULL;
+}
+
 int validConnectedUndirectGraph(VLinkGraph *graph){
+    if(graph == NULL){
+        printf("graph is null , failed\n");
+        return 0;
+    }
+    if(!validUnDirectVLinkGraph(graph)){
+        printf("graph is not undirect graph , failed\n");
+        return 0;
+    }
+    DFSTreeGraph *tree = getDFSTreeGraph(graph);
+    return getSizeAList(tree->treeRoots) == 1;
+}
+
+int validConnectedDirectGraph(VLinkGraph *graph){
     if(graph == NULL){
         printf("graph is null , failed\n");
         return 0;
@@ -572,86 +604,35 @@ void showVLinkGraph(VLinkGraph *graph){
     }
 }
 
-int isCircleUndirectGraph(VLinkGraph * graph){
-    TreeLRTree *nodeTree = createTreeLRTree(NULL , NULL);
-    for(int i = 0 ; i < graph->v ; i ++){
-        int *j = (int *)mallocMemory(sizeof(int));
-        *j = i;
-        insertDataLRTree(j , nodeTree);
+int compare_path_Graph(PathGraph *data1 , PathGraph * data2){
+    return data1->u - data2->u;
+}
+
+int valid_circle_dfs_node_Graph(NodeDFSTreeGraph* node){
+    if(node == NULL){
+        printf("node is null or tree is null , failed\n");
+        return 0;
     }
-    CircleQueue *queue = createCircleQueue(NULL);
-    while(!isEmptyLRTree(nodeTree)){
-        int *startP = (int *)popMinDataLRTree(nodeTree);
-        PathGraph * path = createPathGraph(-1 ,*startP ,UNREACHABLE_GRAPH);
-        freeMemory(startP);
-        pushCircleQueue(path , queue);
-        while(!isEmptyCircleQueue(queue)){
-            path = popCircleQueue(queue);
-            int relationNodeSize = getSizeAList(graph->adj[path->u]);
-            for(int i = 0 ; i < relationNodeSize ; i ++){
-                NodeVlinkGraph * vlinkNode = getElementByIndexAList(i , graph->adj[path->u]);
-                if(getDataFromTreeLRTree(&vlinkNode->u , nodeTree)){
-                    PathGraph *newPath = createPathGraph(path->u ,vlinkNode->u ,vlinkNode->w);
-                    pushCircleQueue(newPath , queue);
-                    int * freeData = (int *)deleteElementLRTree(&vlinkNode->u , nodeTree);
-                    freeMemory(freeData);
-                }else if(vlinkNode->u != path->v){
-                    setFreeDataFuncCircleQueue(destroyPathGraph , queue);
-                    destroyCircleQueue(queue);
-                    setFreeDataFuncLRTree(freeInteger , nodeTree);
-                    destroyTreeLRTree(nodeTree);
-                    return 1;
-                }
-            }
-            freeMemory(path);
+    int adjSize = getSizeAList(node->adjNodeList);
+    for(int i = 0 ; i < adjSize ; i ++){
+        NodeDFSTreeGraph * preNode = getElementByIndexAList(i , node->adjNodeList);
+        if(preNode->rightIndex < node->rightIndex){
+            return 1;
         }
     }
     return 0;
 }
 
-int compare_path_Graph(PathGraph *data1 , PathGraph * data2){
-    return data1->u - data2->u;
-}
-
 int isCircleGraph(VLinkGraph *graph){
-    Stack *nodeStack = createStackStack();
-    TreeLRTree * nodeTree = createTreeLRTree(NULL , NULL);
-    for(int i = 0 ; i < graph->v ; i ++){
-        int *j = (int *)mallocMemory(sizeof(int));
-        *j = i;
-        insertDataLRTree(j , nodeTree);
+    DFSTreeGraph *dfsTree = getDFSTreeGraph(graph);
+    int size = getSizeAList(dfsTree->nodeList);
+    for(int i = 0 ; i < size ; i ++){
+        if(valid_circle_dfs_node_Graph(getElementByIndexAList(i , dfsTree->nodeList))){
+            destroyDFSTreeGraph(dfsTree);
+            return 1;
+        }
     }
-    while(!isEmptyLRTree(nodeTree)){
-        int startP =  parsePointToCommon(popMinDataLRTree(nodeTree));
-        PathGraph * path = createPathGraph(-1 ,startP ,-1);
-        do{
-            int relationNodeSize = getSizeAList(graph->adj[path->u]);
-            if(path->w < relationNodeSize - 1){
-                path->w ++;
-                pushStack(path , nodeStack);
-                path = createPathGraph(path->u ,((NodeVlinkGraph *)getElementByIndexAList(path->w , graph->adj[path->u]))->u ,-1);
-                if(getDataFromTreeLRTree(&path->u , nodeTree) == NULL){
-                    if(validDataExistStack(path , compare_path_Graph ,nodeStack)){
-                        destroyPathGraph(path);
-                        setFreeDataFuncStack(destroyPathGraph , nodeStack);
-                        destroyStack(nodeStack);
-                        setFreeDataFuncLRTree(freeInteger , nodeTree);
-                        destroyTreeLRTree(nodeTree);
-                        return 1;
-                    }else{
-                        destroyPathGraph(path);
-                        path = popStack(nodeStack);
-                    }
-                }else{
-                    int *data = deleteElementLRTree(&path->u , nodeTree);
-                    freeInteger(data);
-                }
-            }else{
-                destroyPathGraph(path);
-                path = popStack(nodeStack);
-            }
-        }while(path != NULL);
-    }
+    destroyDFSTreeGraph(dfsTree);
     return 0;
 }
 
@@ -677,7 +658,7 @@ StronglyConnectedGraph * create_strongly_connected_Graph(int nodeNum){
     return stronglyConnectedGraph;
 }
 
-void destroy_strongly_connected_Graph(StronglyConnectedGraph *stronglyConnectedGraph){
+void destroyStronglyConnectedGraph(StronglyConnectedGraph *stronglyConnectedGraph){
     if(stronglyConnectedGraph == NULL){
         return ;
     }

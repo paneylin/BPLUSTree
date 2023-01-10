@@ -12,8 +12,8 @@ void destroyPathTree(PathTree *tree){
     if(tree == NULL){
         return;
     }
-    setFreeDataFuncAList(destroy_node_PathTree , tree->nodeList);
     if(tree->nodeList != NULL){
+        setFreeDataFuncAList(destroy_node_PathTree , tree->nodeList);
         destroyAList(tree->nodeList);
     }
     tree->root = NULL;

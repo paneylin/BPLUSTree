@@ -260,7 +260,6 @@ int testNodeDFSTree(NodeDFSTreeGraph *node, NodeDFSTreeGraph *pNode , VLinkGraph
     if(!isEmptyLRTree(tree)){
         while(!isEmptyLRTree(tree)){
             int *v = popMinDataLRTree(tree);
-            printf("%d " , *v);
             freeInteger(v);
         }
     }
