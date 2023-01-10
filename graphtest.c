@@ -195,6 +195,111 @@ int testStronglyConnectedGraph(StronglyConnectedGraph * sGraph , VLinkGraph * gr
     return 1;
 }
 
+int testNodeDFSTree(NodeDFSTreeGraph *node, NodeDFSTreeGraph *pNode , VLinkGraph *graph){
+    if(node->leftIndex >= node->rightIndex){
+        printf("node index error!\n");
+        return 0;
+    }
+    if(node->parent != pNode || (pNode != NULL  && (node->leftIndex <= pNode->leftIndex || node->rightIndex >= pNode->rightIndex))){
+        printf("node is not a child of pNode\n");
+        return 0;
+    }
+    TreeLRTree * tree = createTreeLRTree(NULL , NULL);
+    int relationNodeSize = getSizeAList(graph->adj[node->v]);
+    for(int i = 0 ; i < relationNodeSize ; i ++){
+        NodeVlinkGraph *vLinkNode = getElementByIndexAList(i , graph->adj[node->v]);
+        insertDataLRTree(&vLinkNode->u , tree);
+    }
+    int size = getSizeAList(node->adjNodeList);
+    for(int i = 0 ; i < size ; i ++){
+        NodeDFSTreeGraph *preNode = getElementByIndexAList(i , node->adjNodeList);
+        if(preNode->leftIndex >= node->leftIndex ){
+            printf("preNode is not a preNode of node , node is %d , preNode index is %d , node->left %d , node->right %d , preNode->left %d , preNode->right %d\n" 
+            , node->v ,preNode->v , node->leftIndex , node->rightIndex , preNode->leftIndex , preNode->rightIndex);
+            return 0;
+        }
+        if(!getDataFromTreeLRTree(&preNode->v , tree)){
+            printf("node->v is not related to tree , preNode index is %d\n" , preNode->v);
+            return 0;
+        }else{
+            deleteElementLRTree(&preNode->v , tree);
+        }
+    }
+    //printf("test node %d\n");
+    NodeDFSTreeGraph * child = node->child;
+    if(child == NULL && isEmptyLRTree(tree)){
+        destroyTreeLRTree(tree);
+        return 1;
+    }
+    if(isEmptyLRTree(tree)){
+        printf("DFSTree child is not in graph\n");
+        destroyTreeLRTree(tree);
+        return 0;
+    }
+    int startIndex = node->leftIndex;
+    do{
+        if(!testNodeDFSTree(child , node , graph)){
+            destroyTreeLRTree(tree);
+            return 0;
+        }
+        if(!getDataFromTreeLRTree(&child->v , tree)){
+            printf("DFSTree child is not in graph\n");
+            destroyTreeLRTree(tree);
+            return 0;
+        }else{
+            deleteElementLRTree(&child->v , tree);
+        }
+        if(child->leftIndex <= startIndex){
+            printf("brother index not corrected\n");
+            destroyTreeLRTree(tree);
+            return 0;
+        }
+        startIndex = child->rightIndex;
+        child = child->next;
+    }while(child != NULL);
+    if(!isEmptyLRTree(tree)){
+        while(!isEmptyLRTree(tree)){
+            int *v = popMinDataLRTree(tree);
+            printf("%d " , *v);
+            freeInteger(v);
+        }
+    }
+    destroyTreeLRTree(tree);
+    return 1;
+}
+
+int testDFSTree(DFSTreeGraph *tree , VLinkGraph *graph){
+    int nodeSize = getSizeAList(tree->nodeList);
+    if(nodeSize != graph->v){
+        printf("nodeSize is not equal to graph->v, nodeSize is %d , graph->v is %d" , nodeSize , graph->v);
+        return 0;
+    }
+    int fSize = 0;
+    for(int i = 0 ; i < nodeSize ; i ++){
+        NodeDFSTreeGraph *node = getElementByIndexAList(i , tree->nodeList);
+        if(node->v != i){
+            printf("node->u is not equal to i, node->u is %d , i is %d" , node->v , i);
+            return 0;
+        }
+        if(node->leftIndex == 0 || node->rightIndex == 0 || node->rightIndex <= node->leftIndex){
+            printf("node->leftIndex is not equal to i, node->leftIndex is %d , node->rightIndex is %d" , node->leftIndex , node->rightIndex);
+            return 0;
+        }
+        if(node->parent == NULL){
+            fSize ++;
+        }
+    }
+    int forestSize = getSizeAList(tree->treeRoots);
+    printf("DFSTree forestSize is %d , total node is %d\n" , forestSize , graph->v);
+    for(int i = 0 ; i < forestSize ; i ++){
+        NodeDFSTreeGraph * node = getElementByIndexAList(i , tree->treeRoots);
+        if(!testNodeDFSTree(node , NULL , graph)){
+            return 0;
+        }
+    }
+    return 1;
+}
+
 int main(){
     int num = 10;
     scanf("%d",&num);
@@ -211,15 +316,21 @@ int main(){
         }
         insertEdgeVLinkDirectGraph(v , u , weight , vGraph);
     }
-    /*printf("graph create success\n");
-    ArrayList *subGraph = getSubGraphGraph(vGraph);
+    printf("graph create success\n");
+    /*ArrayList *subGraph = getSubGraphGraph(vGraph);
     printf("subFraphs create success\n");
     testSubGraph(vGraph , subGraph);
     int rsl = isCircleGraph(vGraph);
     printf("isCircle is %d\n" , rsl);*/
     //showVLinkGraph(vGraph);
-    StronglyConnectedGraph * sGraph = getStronglyConnectedGraph(vGraph);
+    DFSTreeGraph *tree = getDFSTreeGraph(vGraph);
+    printf("DFSTree create success\n");
+    if(!testDFSTree(tree , vGraph)){
+        exit(0);
+    }
+    printf("DFSTree test success\n");
+    /*StronglyConnectedGraph * sGraph = getStronglyConnectedGraph(vGraph);
     printf("stronglyConnectedGraph create success\n");
-    testStronglyConnectedGraph(sGraph , vGraph);
+    testStronglyConnectedGraph(sGraph , vGraph);*/
     printf("end\n");
 }

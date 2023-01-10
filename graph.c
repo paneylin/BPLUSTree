@@ -138,6 +138,24 @@ VMutrixGraph * createVMutrixGraph(int v){
     return graph;
 }
 
+void destroyVMutrixGraph(VMutrixGraph * graph){
+    if(graph == NULL){
+        return;
+    }
+    if(graph->adj != NULL){
+        for(int i = 0 ; i < graph->v ; i ++){
+            if(graph->adj[i] != NULL){
+                freeMemory(graph->adj[i]);
+                graph->adj[i] = NULL;
+            }
+            freeMemory(graph->adj);
+        }
+        graph->adj = NULL;
+    }
+    freeMemory(graph);
+    graph = NULL;
+}
+
 void insertEdgeVMutrixDirectGraph(int v , int u , int w , VMutrixGraph * graph){
     if(graph == NULL){
         printf("graph is null , failed\n");
@@ -215,7 +233,7 @@ VLinkGraph * changeMutrixtoLinkGraph(VMutrixGraph * graph){
     return newGraph;
 }
 
-int validDirectVMutrixGraph(VMutrixGraph * graph){
+int validUnDirectVMutrixGraph(VMutrixGraph * graph){
     if(graph == NULL){
         printf("graph is null , failed\n");
         return 0;
@@ -230,14 +248,152 @@ int validDirectVMutrixGraph(VMutrixGraph * graph){
     return 1;
 }
 
-int validDirectVLinkGraph(VLinkGraph * graph){
+int validUnDirectVLinkGraph(VLinkGraph * graph){
     if(graph == NULL){
         printf("graph is null , failed\n");
     }
     VMutrixGraph * newGraph = changeLinktoMutrixGraph(graph);
-    int rsl = validDirectVMutrixGraph(newGraph);
+    int rsl = validUnDirectVMutrixGraph(newGraph);
     destroyVMutrixGraph(newGraph);
     return rsl;
+}
+
+NodeDFSTreeGraph *create_node_DFS_tree_Graph(int v){
+    NodeDFSTreeGraph * node = (NodeDFSTreeGraph *)mallocMemory(sizeof(NodeDFSTreeGraph));
+    node->v = v;
+    node->height = node->leftIndex = node->rightIndex = node->visitIndex = 0;
+    node->adjNodeList = createArrayListAList(NULL);
+    node->child = node->parent = node->next = node->pre = NULL;
+    return node;
+}
+
+DFSTreeGraph *create_DFS_tree_Graph(int v){
+    DFSTreeGraph * tree = (DFSTreeGraph *)mallocMemory(sizeof(DFSTreeGraph));
+    tree->treeRoots = createArrayListAList(NULL);
+    tree->nodeList = createArrayListAList(NULL);
+    for(int i = 0 ; i < v ; i ++){
+        NodeDFSTreeGraph * node = create_node_DFS_tree_Graph(i);
+        insertElementAList(node , tree->nodeList);
+    }
+    return tree;
+}
+
+NodeDFSTreeGraph *get_node_DFS_tree_Graph(int v , DFSTreeGraph * tree , VLinkGraph * graph){
+    if(tree == NULL || graph == NULL){
+        printf("tree is null or graph is null, failed\n");
+        return NULL;
+    }
+    if(v < 0 || v >= getSizeAList(tree->nodeList)){
+        printf("index out of range , get_node_DFS_tree_Graph failed\n");
+        return NULL;
+    }
+    NodeDFSTreeGraph * node = getElementByIndexAList(v , tree->nodeList);
+    for(int i = 0 ; i < getSizeAList(graph->adj[v]) ; i ++){
+        NodeVlinkGraph * nodeV = getElementByIndexAList(i , graph->adj[v]);
+        insertElementAList(getElementByIndexAList(nodeV->u , tree->nodeList) , node->adjNodeList);
+    }
+    return node;
+}
+
+int get_next_visit_index_DFS_tree_Graph(NodeDFSTreeGraph * node){
+    if(node == NULL){
+        printf("node is null or tree is null , failed\n");
+        return 0;
+    }
+    int adjSize = getSizeAList(node->adjNodeList);
+    if(node->visitIndex >= adjSize){
+        return -1;
+    }
+    for(int i = node->visitIndex ; i < adjSize ; i ++){
+        NodeDFSTreeGraph * searchNode = getElementByIndexAList(i , node->adjNodeList);
+        if(searchNode->leftIndex == 0){
+            deleteElementByIndexAList(i , node->adjNodeList);
+            printf("new child %d , pNode %d , search index %d , new adjSize %d\n" , searchNode->v , node->v , i , --adjSize);
+            node->visitIndex = i;
+            return searchNode->v;
+        }else if(searchNode->rightIndex != 0 && searchNode->rightIndex > node->leftIndex){
+            deleteElementByIndexAList(i , node->adjNodeList);
+            i --;
+            adjSize --;
+        }
+    }
+    node->visitIndex = getSizeAList(node->adjNodeList);
+    /*printf("pNode %d , preIndex size is %d , preNode index is " , node->v , node->visitIndex);
+    for(int i = 0 ; i < node->visitIndex ; i ++){
+        NodeDFSTreeGraph * searchNode = getElementByIndexAList(i , node->adjNodeList);
+        printf("%d " , searchNode->v);
+    }
+    printf("\n");*/
+    return -1;
+}
+
+void set_node_parent_DFS_tree_Graph(NodeDFSTreeGraph * node , NodeDFSTreeGraph * parent){
+    if(node == NULL || parent == NULL){
+        printf("node or parent is null , failed\n");
+        return;
+    }
+    node->parent = parent;
+    if(parent->child == NULL){
+        parent->child = node;
+    }else{
+        NodeDFSTreeGraph * searchNode = parent->child;
+        while(searchNode->next != NULL){
+            searchNode = searchNode->next;
+        }
+        searchNode->next = node;
+        node->pre = searchNode;
+    }
+}
+
+DFSTreeGraph *getDFSTreeGraph(VLinkGraph * graph){
+    if(graph == NULL){
+        printf("graph is null , failed\n");
+        return NULL;
+    }
+    DFSTreeGraph * tree = create_DFS_tree_Graph(graph->v);
+    Stack *nodeStack = createStackStack();
+    TreeLRTree * nodeTree = createTreeLRTree(NULL , NULL);
+    for(int i = 0 ; i < graph->v ; i ++){
+        int *j = (int *)mallocMemory(sizeof(int));
+        *j = i;
+        insertDataLRTree(j , nodeTree);
+    }
+    int treeIndex = 1;
+    while(!isEmptyLRTree(nodeTree)){
+        int startP =  parsePointToCommon(popMinDataLRTree(nodeTree));
+        NodeDFSTreeGraph * node = get_node_DFS_tree_Graph(startP , tree , graph);
+        insertElementAList(node , tree->treeRoots);
+        node->leftIndex = treeIndex ++;
+        node->height = 1;
+        do{
+            int nextNodeIndex = get_next_visit_index_DFS_tree_Graph(node);
+            if(nextNodeIndex == -1){
+                node->rightIndex = treeIndex ++;
+                node = popStack(nodeStack);
+            }else{
+                NodeDFSTreeGraph * nextNode = get_node_DFS_tree_Graph(nextNodeIndex , tree , graph);
+                set_node_parent_DFS_tree_Graph(nextNode , node);
+                int *data = deleteElementLRTree(&nextNode->v , nodeTree);
+                freeMemory(data);
+                pushStack(node , nodeStack);
+                node = nextNode;
+                node->leftIndex = treeIndex ++;
+                node->height = node->parent->height + 1;
+            }
+        }while(node != NULL);
+    }
+    destroyStack(nodeStack);
+    destroyTreeLRTree(nodeTree);
+    return tree;
+}
+
+int validConnectedUndirectGraph(VLinkGraph *graph){
+    if(graph == NULL){
+        printf("graph is null , failed\n");
+        return 0;
+    }
+    DFSTreeGraph *tree = getDFSTreeGraph(graph);
+    return getSizeAList(tree->treeRoots) == 1;
 }
 
 PathGraph *createPathGraph(int v , int u  , int w){
@@ -401,24 +557,6 @@ ArrayList *getSubGraphGraph(VLinkGraph * graph){
     return subGraphs;
 }
 
-void destroyVMutrixGraph(VMutrixGraph * graph){
-    if(graph == NULL){
-        return;
-    }
-    if(graph->adj != NULL){
-        for(int i = 0 ; i < graph->v ; i ++){
-            if(graph->adj[i] != NULL){
-                freeMemory(graph->adj[i]);
-                graph->adj[i] = NULL;
-            }
-            freeMemory(graph->adj);
-        }
-        graph->adj = NULL;
-    }
-    freeMemory(graph);
-    graph = NULL;
-}
-
 void showVLinkGraph(VLinkGraph *graph){
     if(graph == NULL){
         printf("graph is null , show nothing\n");
@@ -517,10 +655,6 @@ int isCircleGraph(VLinkGraph *graph){
     return 0;
 }
 
-int isConnectedGraph(VLinkGraph *graph){
-    ArrayList * subGraphs = getSubGraphGraph(graph);
-    return getSizeAList(subGraphs) == 1;
-}
 PathStronglyConnectedGraph *create_path_strong_connected_Graph(int v , int u , int w , int nodeIndex){
     PathStronglyConnectedGraph *path = (PathStronglyConnectedGraph *)mallocMemory(sizeof(PathStronglyConnectedGraph));
     path->v = v;

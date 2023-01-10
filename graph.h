@@ -57,6 +57,23 @@ typedef struct  StronglyConnectedGraph{
     ArrayList **adj;
 }StronglyConnectedGraph;
 
+typedef struct NodeDFSTreeGraph{
+    int v;
+    int height;
+    int leftIndex;
+    int rightIndex;
+    int visitIndex;
+    ArrayList *adjNodeList;
+    struct NodeDFSTreeGraph *parent;
+    struct NodeDFSTreeGraph *next;
+    struct NodeDFSTreeGraph *pre;
+    struct NodeDFSTreeGraph *child;
+}NodeDFSTreeGraph;
+
+typedef struct DFSTreeGraph{
+    ArrayList *treeRoots;
+    ArrayList *nodeList;
+}DFSTreeGraph;
 
 const int PATH_NOT_EXSIT_GRAPH = -1;
 const int UNREACHABLE_GRAPH = -1;
@@ -78,11 +95,15 @@ VMutrixGraph *changeLinktoMutrixGraph(VLinkGraph * graph);
 VLinkGraph * changeMutrixtoLinkGraph(VMutrixGraph * graph);
 //获取图的转置图
 VLinkGraph *getRevertVLinkGraph(VLinkGraph * graph);
-//判断邻接图是否有向
-int validDirectVLinkGraph(VLinkGraph * graph);
-//判断矩阵图是否有向
-int validDirectVMutrixGraph(VMutrixGraph * graph);
-//将一个图分割成几个子图，子图之间互相不连通
+//判断邻接图是否无向图
+int validUnDirectVLinkGraph(VLinkGraph * graph);
+//判断矩阵图是否无向图
+int validUnDirectVMutrixGraph(VMutrixGraph * graph);
+//判断图是否连通
+int validConnectedUndirectGraph(VLinkGraph *graph);
+//获取图的DFS访问树
+DFSTreeGraph *getDFSTreeGraph(VLinkGraph * graph);
+//将一个图分割成几个子图，子图是连通图
 ArrayList *getSubGraphGraph(VLinkGraph *graph);
 //销毁图，并释放内存
 void destroyVlinkGraph(VLinkGraph *graph);
@@ -94,8 +115,7 @@ int isCircleUndirectGraph(VLinkGraph * graph);
 int isCircleGraph(VLinkGraph *graph);
 //获取有向图连通子图
 ArrayList *getSubGraphGraph(VLinkGraph * graph);
-//判断图是否连通
-int isConnectedGraph(VLinkGraph *graph);
+
 
 
 #include"./graph.c"
