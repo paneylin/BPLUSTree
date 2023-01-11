@@ -14,7 +14,7 @@ typedef struct HeapNodeFHeap
     struct HeapNodeFHeap *child;
     struct HeapNodeFHeap *right;
     struct HeapNodeFHeap *left;
-    struct HeapNodeFHeap *topChild;
+    //struct HeapNodeFHeap *topChild;
 }HeapNodeFHeap;
 
 typedef struct FHeap
@@ -53,6 +53,10 @@ FHeap * combindHeapsFHeap(FHeap *heap1 , FHeap *heap2);
  void updateKeyFHeap(void *key1 , void *key2 , FHeap *heap);
 //销毁堆栈并释放内存
  void destoryFHeap(FHeap * heap);
+ //node对应的key优先级下降
+ void reduceKeyWithNodeFHeap(HeapNodeFHeap * node , FHeap * heap);
+//node对应的key优先级上升
+ void increaseKeyWithNodeFHeap(HeapNodeFHeap * node , FHeap * heap);
 //更新node对应的key值大小，并返回该key对应的新节点node
  void updateKeyWithNodeFHeap(void * key , HeapNodeFHeap * node , FHeap * heap);
 //查看key是否在FHeap当中

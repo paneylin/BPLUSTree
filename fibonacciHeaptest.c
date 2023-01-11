@@ -20,15 +20,19 @@ int testFHeapNum(FHeap * heap , int dataSize){
     int totalNUm = 0;
     int * data = NULL;
     CircleQueue *queue = createCircleQueue();
+    printf("testFHeapNum , heap degreeSize is %d , heap size is %d\n" , heap->dgreeSize , heap->heapSize);
     for(int i = 0 ; i < heap->dgreeSize ; i ++){
-        if(getSizeAList(heap->degreeList[i]) > 0){
-            pushCircleQueue(getFirstElementAList(heap->degreeList[i]) , queue);
+        int elementSize = getSizeAList(heap->degreeList[i]);
+        for(int j = 0 ; j < elementSize ; j ++){
+            pushCircleQueue(getElementByIndexAList(j , heap->degreeList[i]), queue);
         }
     }
+    printf("testFHeapNum \n");
     while(!isEmptyCircleQueue(queue)){
         HeapNodeFHeap * node = (HeapNodeFHeap *)popCircleQueue(queue);
         totalNUm ++;
         if(node->child != NULL){
+            printf("testFHeapNum , node->key is %d , node->child->key is %d\n" , *(int *)node->key , *(int *)node->child->key);
             pushCircleQueue(node->child , queue);
             HeapNodeFHeap * temp = node->child->right;
             while(temp != node->child){
@@ -57,11 +61,9 @@ int testFheapStruct(FHeap * heap){
     }
     CircleQueue *queue = createCircleQueue();
     for(int i = 0 ; i < heap->dgreeSize ; i ++){
-        if(getSizeAList(heap->degreeList[i]) > 1){
-            printf("error , degreeList[%d] size is %d\n" , i , getSizeAList(heap->degreeList[i]));
-            return 0;
-        }else if(getSizeAList(heap->degreeList[i]) == 1){
-            HeapNodeFHeap * node = (HeapNodeFHeap *)getFirstElementAList(heap->degreeList[i]);
+        int elementSize = getSizeAList(heap->degreeList[i]);
+        for(int j = 0 ; j < elementSize ; j ++){
+            HeapNodeFHeap * node = (HeapNodeFHeap *)getElementByIndexAList(j , heap->degreeList[i]);
             if(node->left != NULL || node->right != NULL || node->parent != NULL){
                 printf("error , degreeList[%d] first node left or right or parent is not NULL\n" , i);
                 return 0;
@@ -85,9 +87,6 @@ int testFheapStruct(FHeap * heap){
                     printf("testFheapStruct error , node %d , %d child-degree is %d\n" , *(int *)node->key , childDegree , temp->degree);
                     return 0;
                 }
-                if(temp == node->topChild){
-                    flag = 0;
-                }
                 pushCircleQueue(temp , queue);
                 temp = temp->right;
                 childDegree ++;
@@ -96,13 +95,9 @@ int testFheapStruct(FHeap * heap){
                 printf("testFheapStruct error , node %d degree is %d , last childDegree is %d\n" , *(int *)node->key , node->degree , childDegree - 1);
                 return 0;
             }
-            if(flag){
-                printf("testFheapStruct error , node %d topChild is not in child list\n" , *(int *)node->key);
-                return 0;
-            }
         }else{
-            if(node->topChild != NULL){
-                printf("testFheapStruct error , node %d topChild is not NULL\n" , *(int *)node->key);
+            if(node->degree != 1){
+                printf("testFheapStruct error , node %d degree is %d , but child is NULL\n" , *(int *)node->key , node->degree);
                 return 0;
             }
         }
@@ -118,34 +113,32 @@ int testFHeapSequence(FHeap * heap){
     }
     CircleQueue *queue = createCircleQueue();
     HeapNodeFHeap * topNode = heap->topNode;
+    int flag = 0;
     for(int i = 0 ; i < heap->dgreeSize ; i ++){
-        if(getSizeAList(heap->degreeList[i]) > 0){
-            HeapNodeFHeap * node = (HeapNodeFHeap *)getFirstElementAList(heap->degreeList[i]);
-            if(i == topNode->degree - 1){
-                if(node != topNode){
-                    printf("testFHeapSequence error , topNode is %d , degreeList[%d] first node is %d\n" , *(int *)topNode->key , i , *(int *)node->key);
-                    return 0;
-                }
+        int elementSize = getSizeAList(heap->degreeList[i]);
+        for(int j = 0 ; j < elementSize ; j ++){
+            HeapNodeFHeap * node = (HeapNodeFHeap *)getElementByIndexAList(j , heap->degreeList[i]);
+            if(node == topNode){
+                 flag = 1;
             }else if(compareKeyFunc(node->key , topNode->key) > 0){
                 printf("testFHeapSequence error , node %d is more likely be heap topNode, topNode is %d\n" ,*(int *)node->key , (int *)topNode->key);
                 return 0;
             }
-            pushCircleQueue(getFirstElementAList(heap->degreeList[i]) , queue);
+            pushCircleQueue(node, queue);
         }
+    }
+    if(flag == 0){
+        printf("testFHeapSequence error , topNode is not in degreeList\n");
+        return 0;
     }
     while(!isEmptyCircleQueue(queue)){
         HeapNodeFHeap * node = (HeapNodeFHeap *)popCircleQueue(queue);
         if(node->child != NULL){
-            topNode = node->topChild;
-            if(compareKeyFunc(topNode->key , node->key) > 0){
-                printf("testFHeapSequence error ,child node %d is more likely be father, PNode is %d\n " , *(int *)topNode->key , *(int *)node->key );
-                return 0;
-            }
             HeapNodeFHeap * temp = node->child;
             do{
                 pushCircleQueue(temp , queue);
-                if(compareKeyFunc(temp->key , topNode->key) > 0){
-                    printf("testFHeapSequence error , node %d is more likely be topNode, topNode is %d\n" , *(int *)temp->key , *(int *)topNode->key);
+                if(compareKeyFunc(temp->key , node->key) > 0){
+                    printf("testFHeapSequence error , node %d is more likely be pNode, pNode is %d\n" , *(int *)temp->key , *(int *)node->key);
                     return 0;
                 }
                 temp = temp->right;
@@ -211,6 +204,10 @@ int main(){
         }
     }
     printf("insert success\n");
+    if(!testFHeap(heao1 , datas , num)){
+        printf("testFHeap error\n");
+        return 0;
+    } 
     for(int i = 0 ; i < num ; i ++){
         printf("old key is %d " , *datas[i]);
         int *newKey = datas[i];
