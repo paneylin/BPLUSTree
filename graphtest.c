@@ -316,18 +316,25 @@ int main(){
         insertEdgeVLinkDirectGraph(v , u , weight , vGraph);
     }
     printf("graph create success\n");
-    /*ArrayList *subGraph = getSubGraphGraph(vGraph);
+    ArrayList *subGraph = getSubGraphGraph(vGraph);
     printf("subFraphs create success\n");
     testSubGraph(vGraph , subGraph);
-    int rsl = isCircleGraph(vGraph);
+
+    /*ArrayList *subGraph = getSubGraphGraph(vGraph);
+    printf("subFraphs create success\n");
+    testSubGraph(vGraph , subGraph);*/
+
+    /*int rsl = isCircleGraph(vGraph);
     printf("isCircle is %d\n" , rsl);*/
     //showVLinkGraph(vGraph);
-    DFSTreeGraph *tree = getDFSTreeGraph(vGraph);
+
+    /*DFSTreeGraph *tree = getDFSTreeGraph(0,vGraph);
     printf("DFSTree create success\n");
     if(!testDFSTree(tree , vGraph)){
         exit(0);
     }
-    printf("DFSTree test success\n");
+    printf("DFSTree test success\n");*/
+    
     /*StronglyConnectedGraph * sGraph = getStronglyConnectedGraph(vGraph);
     printf("stronglyConnectedGraph create success\n");
     testStronglyConnectedGraph(sGraph , vGraph);*/

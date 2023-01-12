@@ -44,11 +44,19 @@ typedef struct DistanceGraph{
     int distance;
 }DistanceGraph;
 
-typedef struct PointRelation{
+typedef struct PointRelationGragh{
     int sourceP;
     int targetP;
+    //记录同组point信息，每个元素是一个PointRelation格式
     ArrayList *targetPointList;
-}PointRelation;
+}PointRelationGragh;
+
+typedef struct PointSubGragh{
+   HashTable *map;
+   //记录图中点被分几类，每个类是一个arraylist，与PointRelationGragh中的list对应
+   ArrayList *goupPoints;
+}PointSubGragh;
+
 
 typedef struct  StronglyConnectedGraph{
     //强连通图数量
@@ -105,13 +113,13 @@ VLinkGraph *getRevertVLinkGraph(VLinkGraph * graph);
 int validUnDirectVLinkGraph(VLinkGraph * graph);
 //判断矩阵图是否无向图
 int validUnDirectVMutrixGraph(VMutrixGraph * graph);
-//获取图的DFS访问树
-DFSTreeGraph *getDFSTreeGraph(VLinkGraph * graph);
+//获取图的DFS访问树,starP为首先访问节点
+DFSTreeGraph *getDFSTreeGraph(int startP , VLinkGraph * graph);
 //销毁DFSTree访问树并释放内存
 void destroyDFSTreeGraph(DFSTreeGraph * tree);
 //判断无向图是否连通
 int validConnectedUndirectGraph(VLinkGraph *graph);
-//判断有向图连通
+//判断有向图连通,不能返回-1 ，如果能返回首访问节点
 int validConnectedDirectGraph(VLinkGraph *graph);
 //判断图是否有环
 int isCircleGraph(VLinkGraph *graph);
