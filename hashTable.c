@@ -216,6 +216,7 @@ void insertElementHTable(void * data , HashTable * table){
 
 void * getElementsHTable(void * key , HashTable * table){
     int position = get_hash_position_key_HTable(key , table);
+    int orginalPosition = position;
     while(!is_empty_position_HTable(position , table)){
         void * positionkey = get_key_from_position_HTable(position , table);
         if(table->compareFunc(positionkey , key) == 0){
@@ -224,6 +225,9 @@ void * getElementsHTable(void * key , HashTable * table){
         position++;
         if(position == table->tableSize){
             position = 0;
+        }
+        if(position == orginalPosition){
+            break;
         }
     }
     return NULL;
@@ -251,4 +255,29 @@ ArrayList * getAllDatasInTableHTable(HashTable * table){
         }
     }
     return list;
+}
+
+void *deleteElementHTable(void * key , HashTable * table){
+    int position = get_hash_position_key_HTable(key , table);
+    int orginalPosition = position;
+    while(!is_empty_position_HTable(position , table)){
+        void * positionkey = get_key_from_position_HTable(position , table);
+        if(table->compareFunc(positionkey , key) == 0){
+            void * data = get_data_from_position_HTable(position , table);
+            if(table->freeKeyFunc != NULL){
+                table->freeKeyFunc(get_key_from_position_HTable(position , table));
+            }
+            set_data_by_position_HTable(position , NULL , NULL , table);
+            table->curDataSize--;
+            return data;
+        }
+        position++;
+        if(position == table->tableSize){
+            position = 0;
+        }
+        if(position == orginalPosition){
+            break;
+        }
+    }
+    return NULL;
 }

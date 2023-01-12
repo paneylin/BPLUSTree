@@ -40,6 +40,8 @@ void *getElementsHTable(void * key , HashTable * table);
 void destroyHTable(HashTable * table);
 //获取hashtable中所有的数据，返回ArrayList
 ArrayList * getAllDatasInTableHTable(HashTable * table);
+//删除key对应的数据并返回该数据
+void *deleteElementHTable(void * key , HashTable * table);
 
 const int TABLE_SIZE_HASH_TABLE_DEFAULT = 100;
 
