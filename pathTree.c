@@ -181,7 +181,7 @@ DistanceGraph* getShortestDistancePathTree(int start , int end , VLinkGraph *gra
     return distance;
 }
 
-ArrayList *get_all_leaf_node_PathTree(PathTree *tree){
+/*ArrayList *get_all_leaf_node_PathTree(PathTree *tree){
     ArrayList *leafList = createArrayListAList(NULL);
     ArrayList *nodeList = tree->nodeList;
     int size = getSizeAList(nodeList);
@@ -259,5 +259,54 @@ DistanceGraph *getDiameterPathTreeUndirectPathTree(VLinkGraph * graph){
     setFreeDataFuncAList(destroyVlinkGraph , subGraphs);
     destroyAList(subGraphs);
     return rsl;
+}*/
+
+int *get_key_for_node_heap_PathTree(NodeHeapInfo *node){
+    return &((PathGraph *)node->data)->u;
+}
+
+int get_hash_key_for_node_heap_PathTree(int *key){
+    return *key;
+}
+
+int compare_node_heap_PathTree(NodeHeapInfo *node1 , NodeHeapInfo *node2){
+    if(((PathGraph *)node2->data)->w = UNREACHABLE_GRAPH){
+        return 1;
+    }else if(((PathGraph *)node1->data)->w = UNREACHABLE_GRAPH){
+        return -1;
+    }
+    return ((PathGraph *)node2->data)->w - ((PathGraph *)node1->data)->w;
+}
+
+void update_heap_priority_PathTree(int startPoint , VLinkGraph *graph , HashTable *nodeTable , HeapInfo *heap){
+    int updatePointSize = getSizeAList(graph->adj[startPoint]);
+    for(int i = 0 ; i < updatePointSize ; i ++){
+        NodeVlinkGraph * node = getElementByIndexAList(i , graph->adj[startPoint]);
+        int updatePoint = node->u;
+        int distance = node->w;
+        NodeHeapInfo *nodeHeap = getElementsHTable(&updatePoint , nodeTable);
+        if(nodeHeap == NULL){
+            continue;
+        }
+        if(((PathGraph *)nodeHeap->data)->w == UNREACHABLE_GRAPH || ((PathGraph *)nodeHeap->data)->w > distance){
+            ((PathGraph *)nodeHeap->data)->w = distance;
+            ((PathGraph *)nodeHeap->data)->v = startPoint;
+            decreseDataHeap(nodeHeap , heap);
+        }
+    }
+}
+
+PathTree *getGenericMSTPrimPathTree(VLinkGraph *graph , int start){
+    PathTree *rsl = createPathTree(graph->v);
+    HashTable *nodeTable = createHashTable(graph->v , get_key_for_node_heap_PathTree , NULL , get_hash_key_for_node_heap_PathTree);
+    HeapInfo *heap = createHeapInfoHeap(graph->v , compare_node_heap_PathTree);
+    setBlockSizeHTable(graph->v , nodeTable);
+    setHashFactorHTable(1 , nodeTable);
+    for(int i = 0 ; i < graph->v ; i++){
+        PathGraph *path = createPathGraph(-1 , i , UNREACHABLE_GRAPH);
+        insertElementHTable(path , nodeTable);
+        insertElementHeap(path , heap);
+    }
+    update_heap_priority_PathTree(start , graph , nodeTable , heap);
 }
 

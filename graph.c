@@ -615,12 +615,14 @@ int validConnectedDirectGraph(VLinkGraph *graph){
     PointSubGragh *pointSubGraph = group_week_connected_points_Graph(graph);
     int graphSize = getSizeAList(pointSubGraph->goupPoints);
     if(graphSize > 1){
+        destory_point_sub_graph_Graph(pointSubGraph);
         return -1;
     }
     ArrayList * list = getFirstElementAList(pointSubGraph->goupPoints);
     PointRelationGragh * point = getFirstElementAList(list);
     DFSTreeGraph *tree = getDFSTreeGraph(point->sourceP ,graph);
     if(getSizeAList(tree->treeRoots) != 1){
+        destory_point_sub_graph_Graph(pointSubGraph);
         return -1;
     }
     int rslPoint = point->sourceP;

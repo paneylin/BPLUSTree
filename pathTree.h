@@ -4,6 +4,8 @@
 #include"./graph.h"
 #include"./leftRightTree.h"
 #include"./CircleQueue.h"
+#include"./heap.h"
+#include"./hashTable.h"
 
 typedef struct NodePathTree{
     int u;
@@ -25,7 +27,9 @@ void destroyPathTree(PathTree *tree);
 //获取图上指定两点的最短路径，distanceGraph需自己销毁
 DistanceGraph* getShortestDistancePathTree(int start , int end , VLinkGraph *graph);
 //获取图上最长的最短路径
-DistanceGraph* getDiameterPathTreeUndirectPathTree(VLinkGraph *graph);
+//DistanceGraph* getDiameterPathTreeUndirectPathTree(VLinkGraph *graph);
+//生成最小生成树PRIM
+NodePathTree *getGenericMSTPrimPathTree(VLinkGraph *graph , int start);
 
 #include "./pathTree.c"
 

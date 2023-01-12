@@ -316,9 +316,8 @@ int main(){
         insertEdgeVLinkDirectGraph(v , u , weight , vGraph);
     }
     printf("graph create success\n");
-    ArrayList *subGraph = getSubGraphGraph(vGraph);
-    printf("subFraphs create success\n");
-    testSubGraph(vGraph , subGraph);
+    int connectPoint = validConnectedDirectGraph(vGraph);
+    printf("connected Point is %d\n" , connectPoint);
 
     /*ArrayList *subGraph = getSubGraphGraph(vGraph);
     printf("subFraphs create success\n");
@@ -334,7 +333,7 @@ int main(){
         exit(0);
     }
     printf("DFSTree test success\n");*/
-    
+
     /*StronglyConnectedGraph * sGraph = getStronglyConnectedGraph(vGraph);
     printf("stronglyConnectedGraph create success\n");
     testStronglyConnectedGraph(sGraph , vGraph);*/
