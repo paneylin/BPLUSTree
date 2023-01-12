@@ -1,12 +1,27 @@
 #include "./heap.h"
 
-int compare_value_default_Heap(void *data1, void *data2){
-    return *(int *)data1 - *(int *)data2;
+int compare_value_default_Heap(NodeHeapInfo *data1, NodeHeapInfo *data2){
+    return *(int *)(data1->data) - *(int *)(data2->data);
 }
 
-HeapInfo *createHeapInfoHeap(int basicHeapSize ,int (*compareFunc)(void * , void *)){
-    HeapInfo *heapInfo = (HeapInfo *)malloc(sizeof(HeapInfo));
-    heapInfo->heapData = (void **)malloc(sizeof(void *) * basicHeapSize);
+NodeHeapInfo *create_node_Heap(void * data , int index){
+    NodeHeapInfo * node = (NodeHeapInfo *)mallocMemory(sizeof(NodeHeapInfo));
+    node->data = data;
+    node->index = index;
+    return node;
+}
+
+void destroy_node_Heap(NodeHeapInfo *node , void (*freeDataFunc)(void *)){
+    if(freeDataFunc != NULL){
+        freeDataFunc(node->data);
+    }
+    freeMemory(node);
+    node = NULL;
+}
+
+HeapInfo *createHeapInfoHeap(int basicHeapSize ,int (*compareFunc)(NodeHeapInfo * , NodeHeapInfo *)){
+    HeapInfo *heapInfo = (HeapInfo *)mallocMemory(sizeof(HeapInfo));
+    heapInfo->heapData = (NodeHeapInfo **)mallocMemory(sizeof(void *) * basicHeapSize);
     heapInfo->heapSize = basicHeapSize;
     heapInfo->dataSize = 0;
     heapInfo->compareFunc = compareFunc;
@@ -21,7 +36,7 @@ void showHeapInfo(HeapInfo * heapInfo , void (*showFunc)(void *)){
     printf("dataSize:%d\n",heapInfo->dataSize);
     printf("heapData:\n");
     for(int i = 0;i < heapInfo->dataSize;i++){
-        showFunc(heapInfo->heapData[i]);
+        showFunc(heapInfo->heapData[i]->data);
     }
     printf("\n");
 }
@@ -60,9 +75,11 @@ int get_tree_height_start_index_Heap(int height){
 }
 
 void exchange_data_position_heap(HeapInfo *heapInfo ,int index1 , int index2){
-    void *temp = heapInfo->heapData[index1];
+    NodeHeapInfo *temp = heapInfo->heapData[index1];
     heapInfo->heapData[index1] = heapInfo->heapData[index2];
+    heapInfo->heapData[index1]->index = index1;
     heapInfo->heapData[index2] = temp;
+    heapInfo->heapData[index2]->index = index2;
 }
 
 int exchange_heap(HeapInfo *heapInfo , int parentIndex , int leftIndex , int rightIndex){
@@ -160,7 +177,7 @@ void reBuid_Heap(HeapInfo *heapInfo , int startIndex , int endIndex){
             }
         }
     }
-    destroyCircleQueueQ(queue);
+    destroyCircleQueue(queue);
 }
 
 void * getElementHeap(HeapInfo *heapInfo){
@@ -168,7 +185,7 @@ void * getElementHeap(HeapInfo *heapInfo){
         printf("heap is empty\n");
         return NULL;
     }
-    return heapInfo->heapData[0];
+    return heapInfo->heapData[0]->data;
 }
 
 void * popElementHeap(HeapInfo * heapInfo){
@@ -176,9 +193,10 @@ void * popElementHeap(HeapInfo * heapInfo){
         printf("heap is empty\n");
         return NULL;
     }
-    void *data = heapInfo->heapData[0];
+    void *data = heapInfo->heapData[0]->data;
     if(heapInfo->dataSize > 1){
         heapInfo->heapData[0] = heapInfo->heapData[heapInfo->dataSize - 1];
+        heapInfo->heapData[0]->index = 0;
         heapInfo->heapData[heapInfo->dataSize - 1] = NULL;
         heapInfo->dataSize --;
         repare_down_heap(heapInfo);
@@ -188,13 +206,14 @@ void * popElementHeap(HeapInfo * heapInfo){
     return data;
 }
 
-void insertElementsHeap(void **data , int dataSize , HeapInfo *heapInfo){
+ArrayList *insertElementsHeap(void **data , int dataSize , HeapInfo *heapInfo){
+    ArrayList *nodeRsl = createArrayListAList(NULL);
     if(heapInfo == NULL){
         printf("heap is empty\n");
         return;
     }
     if(heapInfo->dataSize + dataSize > heapInfo->heapSize){
-        void ** tempPt = (void **)realloc(heapInfo->heapData, sizeof(void *) * (heapInfo->dataSize + dataSize));
+        NodeHeapInfo ** tempPt = (NodeHeapInfo **)rellocMemory(heapInfo->heapData, sizeof(void *) * (heapInfo->dataSize + dataSize));
         if(tempPt != NULL){
             heapInfo->heapData = tempPt;
         }else{
@@ -202,18 +221,20 @@ void insertElementsHeap(void **data , int dataSize , HeapInfo *heapInfo){
             return;
         }
         
-        heapInfo->heapSize *= heapInfo->dataSize + dataSize;
+        heapInfo->heapSize = heapInfo->dataSize + dataSize;
     }
     int startDataIndex = heapInfo->dataSize;
     for(int i = 0; i < dataSize ; i ++){
-        heapInfo->heapData[heapInfo->dataSize + i] = data[i];
+        heapInfo->heapData[heapInfo->dataSize + i] = create_node_Heap(data[i] , heapInfo->dataSize + i);
+        insertElementAList(heapInfo->heapData[heapInfo->dataSize + i] , nodeRsl);
     }
     heapInfo->dataSize += dataSize;
     int endIndex = heapInfo->dataSize - 1;
     reBuid_Heap(heapInfo,startDataIndex,endIndex);
+    return nodeRsl;
 }
 
-void insertElementHeap(void *data , HeapInfo * heapInfo){
+NodeHeapInfo *insertElementHeap(void *data , HeapInfo * heapInfo){
     if(heapInfo == NULL){
         printf("heap is NULL\n");
         return;
@@ -223,7 +244,7 @@ void insertElementHeap(void *data , HeapInfo * heapInfo){
         return;
     }
     if(heapInfo->dataSize == heapInfo->heapSize){
-        void ** tempPt = (void **)realloc(heapInfo->heapData, sizeof(void *) * (heapInfo->heapSize*2));
+        NodeHeapInfo ** tempPt = (NodeHeapInfo **)rellocMemory(heapInfo->heapData, sizeof(void *) * (heapInfo->heapSize*2));
         if(tempPt != NULL){
             heapInfo->heapData = tempPt;
         }else{
@@ -232,9 +253,11 @@ void insertElementHeap(void *data , HeapInfo * heapInfo){
         }
         heapInfo->heapSize *= 2;
     }
-    heapInfo->heapData[heapInfo->dataSize] = data;
+    NodeHeapInfo * node = create_node_Heap(data , heapInfo->dataSize);
+    heapInfo->heapData[heapInfo->dataSize] = node;
     heapInfo->dataSize ++;
     repare_up_heap(heapInfo);
+    return node;
 }
 
 int getHeapSizeHeap(HeapInfo * heap){
@@ -254,15 +277,28 @@ void destroyHeapInfoHeap(HeapInfo * heapInfo){
         return;
     }
     if(heapInfo->heapData != NULL){
-        if(heapInfo->freeDataFunc != NULL){
-            for(int i = 0 ; i < heapInfo->dataSize ; i ++){
-                heapInfo->freeDataFunc(heapInfo->heapData[i]);
-                heapInfo->heapData[i] = NULL;
-            }
+        for(int i = 0 ; i < heapInfo->dataSize ; i ++){
+            destroy_node_Heap(heapInfo->heapData[i] , heapInfo->freeDataFunc);
         }
-        free(heapInfo->heapData);
+        freeMemory(heapInfo->heapData);
         heapInfo->heapData = NULL;
     }
-    free(heapInfo);
+    freeMemory(heapInfo);
     heapInfo = NULL;
+}
+
+void increaseDataHeap(NodeHeapInfo * nodeHeapInfo , HeapInfo * heapInfo){
+    if(nodeHeapInfo == NULL || heapInfo == NULL){
+        printf("nodeHeapInfo or heapInfo is NULL\n");
+        return;
+    }
+    exchange_from_top_heap(heapInfo , nodeHeapInfo->index);
+}
+
+void decreseDataHeap(NodeHeapInfo * nodeHeapInfo , HeapInfo * heapInfo){
+    if(nodeHeapInfo == NULL || heapInfo == NULL){
+        printf("nodeHeapInfo or heapInfo is NULL\n");
+        return;
+    }
+    exchange_from_bottom_heap(heapInfo , nodeHeapInfo->index);
 }

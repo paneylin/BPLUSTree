@@ -17,7 +17,4 @@ int main()
     for(int i = 0 ; i < num ; i ++){
         printf("%d ",*(int *) popElementHeap(heapInfo));
     }
-    while(1){
-        scanf("%d",&num);
-    }
 }
