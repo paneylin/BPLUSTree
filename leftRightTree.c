@@ -547,6 +547,9 @@ void *getMinDataLRTree(TreeLRTree * tree){
         return NULL;
     }
     TreeNodeLRTree * node = get_min_node_from_tree_LRTree(tree->root);
+    if(node == NULL){
+        return NULL;
+    }
     return node->data;
 }
 
@@ -556,6 +559,9 @@ void * getMaxDataLRTree(TreeLRTree * tree){
         return NULL;
     }
     TreeNodeLRTree * node = get_max_node_from_tree_LRTree(tree->root);
+    if(node == NULL){
+        return NULL;
+    }
     return node->data;
 }
 
