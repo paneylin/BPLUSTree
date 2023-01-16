@@ -5,7 +5,7 @@ void destroy_node_PathTree(NodePathTree *node){
         return;
     }
     node->parent = node->next = node->pre = node->child = NULL;
-    free(node);
+    freeMemory(node);
 }
 
 void destroyPathTree(PathTree *tree){
@@ -17,12 +17,12 @@ void destroyPathTree(PathTree *tree){
         destroyAList(tree->nodeList);
     }
     tree->root = NULL;
-    free(tree);
+    freeMemory(tree);
     tree = NULL;
 }
 
 NodePathTree *create_node_PathTree(int u){
-    NodePathTree *node = (NodePathTree *)malloc(sizeof(NodePathTree));
+    NodePathTree *node = (NodePathTree *)mallocMemory(sizeof(NodePathTree));
     node->u = u;
     node->height = 0;
     node->distance = UNREACHABLE_GRAPH;
@@ -56,6 +56,7 @@ void set_node_child_PathTree(NodePathTree *node , NodePathTree *parent){
 void cut_node_relation_PathTree(NodePathTree *node){
     if(node->next == node){
         node->parent->child = NULL;
+        node->next = node->pre = NULL;
     }else{
         node->next->pre = node->pre;
         node->pre->next = node->next;
@@ -99,7 +100,7 @@ PathTree *create_path_tree_PathTree(int start ,int  vNum){
         printf("Error: start is out of range in create_path_tree_PathTree\n");
         return NULL;
     }
-    PathTree *tree = (PathTree *)malloc(sizeof(PathTree));
+    PathTree *tree = (PathTree *)mallocMemory(sizeof(PathTree));
     tree->nodeList = createArrayListAList(NULL);
     NodePathTree *node = NULL;
     for(int i = 0 ; i < vNum ; i++){
@@ -113,6 +114,7 @@ PathTree *create_path_tree_PathTree(int start ,int  vNum){
     }
     node->distance = 0;
     tree->root = node;
+    tree->totalDistance = 0;
 }
 
 PathTree *gen_pathtree_PathTree(int start , VLinkGraph *graph){
@@ -139,15 +141,6 @@ PathTree *gen_pathtree_PathTree(int start , VLinkGraph *graph){
     }
     destroyCircleQueue(queue);
     return tree;
-}
-
-PathTree *gen_pathtree_prim_PathTree(int start , VLinkGraph *graph){
-    if(start < 0 || start >= graph->v || graph->v <= 0){
-        printf("Error: start is out of range in gen_pathtree_prim_PathTree\n");
-        return NULL;
-    }
-    PathTree * tree = create_path_tree_PathTree(start , graph->v);
-    
 }
 
 DistanceGraph *create_distance_by_node_PathTree(NodePathTree *node){
@@ -270,9 +263,11 @@ int get_hash_key_for_node_heap_PathTree(int *key){
 }
 
 int compare_node_heap_PathTree(NodeHeapInfo *node1 , NodeHeapInfo *node2){
-    if(((PathGraph *)node2->data)->w = UNREACHABLE_GRAPH){
+    if(((PathGraph *)node2->data)->w == UNREACHABLE_GRAPH){
+        printf("return 1\n");
         return 1;
-    }else if(((PathGraph *)node1->data)->w = UNREACHABLE_GRAPH){
+    }else if(((PathGraph *)node1->data)->w == UNREACHABLE_GRAPH){
+        printf("return 0\n");
         return -1;
     }
     return ((PathGraph *)node2->data)->w - ((PathGraph *)node1->data)->w;
@@ -288,6 +283,7 @@ void update_heap_priority_PathTree(int startPoint , VLinkGraph *graph , HashTabl
         if(nodeHeap == NULL){
             continue;
         }
+        //printf("updatePoint = %d , distance = %d , node is %d\n" , updatePoint , distance , ((PathGraph *)nodeHeap->data)->w);
         if(((PathGraph *)nodeHeap->data)->w == UNREACHABLE_GRAPH || ((PathGraph *)nodeHeap->data)->w > distance){
             ((PathGraph *)nodeHeap->data)->w = distance;
             ((PathGraph *)nodeHeap->data)->v = startPoint;
@@ -296,17 +292,56 @@ void update_heap_priority_PathTree(int startPoint , VLinkGraph *graph , HashTabl
     }
 }
 
-PathTree *getGenericMSTPrimPathTree(VLinkGraph *graph , int start){
-    PathTree *rsl = createPathTree(graph->v);
+void gen_pathtree_prim_PathTree(int v , int u , int w , PathTree * tree){
+    //printf("v = %d , u = %d , w = %d\n  " , v , u , w);
+    NodePathTree *node = get_node_from_tree_PathTree(u , tree);
+    NodePathTree *parent = get_node_from_tree_PathTree(v , tree);
+    set_node_child_PathTree(node , parent);
+    node->distance = w ;
+    node->height = parent->height + 1;
+    tree->totalDistance += w;
+}
+
+PathTree *getGenericMSTPrimPathTree(int start ,VLinkGraph *graph){
+    if(start == -1){
+        start = validConnectedDirectGraph(graph);
+        if(start == -1){
+            printf("Error: graph is not connected in getGenericMSTPrimPathTree\n");
+            return NULL;
+        }
+    }else{
+        DFSTreeGraph *dfsTree = getDFSTreeGraph(start , graph);
+        int treeSize = getSizeAList(dfsTree->treeRoots);
+        destroyDFSTreeGraph(dfsTree);
+        if(treeSize > 1){
+            printf("Error: start point can't connected all points in getGenericMSTPrimPathTree\n");
+            return NULL;
+        }
+    }
+    PathTree *rsl = create_path_tree_PathTree(start , graph->v); 
     HashTable *nodeTable = createHashTable(graph->v , get_key_for_node_heap_PathTree , NULL , get_hash_key_for_node_heap_PathTree);
     HeapInfo *heap = createHeapInfoHeap(graph->v , compare_node_heap_PathTree);
     setBlockSizeHTable(graph->v , nodeTable);
     setHashFactorHTable(1 , nodeTable);
     for(int i = 0 ; i < graph->v ; i++){
+        if(i == start){
+            continue;
+        }
         PathGraph *path = createPathGraph(-1 , i , UNREACHABLE_GRAPH);
-        insertElementHTable(path , nodeTable);
-        insertElementHeap(path , heap);
+        NodeHeapInfo * node = insertElementHeap(path , heap);
+        insertElementHTable(node , nodeTable);
     }
-    update_heap_priority_PathTree(start , graph , nodeTable , heap);
+    do{
+        update_heap_priority_PathTree(start , graph , nodeTable , heap);
+        PathGraph *minPath = getElementHeap(heap);
+        deleteElementHTable(&minPath->u , nodeTable);
+        popElementHeap(heap);
+        gen_pathtree_prim_PathTree(minPath->v , minPath->u , minPath->w , rsl);
+        start = minPath->u;
+        destroyPathGraph(minPath);
+    }while(!isEmptyHeap(heap));
+    destroyHeapInfoHeap(heap);
+    destroyHTable(nodeTable);
+    return rsl;
 }
 

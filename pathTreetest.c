@@ -28,6 +28,11 @@ void testDIstance(int  distance , int v , int u , VLinkGraph * graph){
     }
 }
 
+void testMSTPrim(VLinkGraph * graph){
+    PathTree * tree =  getGenericMSTPrimPathTree(-1,graph);
+    printf("test success , total distance is %d \n" , tree->totalDistance);
+}
+
 int main(){
     int num = 10;
     scanf("%d",&num);
@@ -42,15 +47,15 @@ int main(){
         if(v == u){
             continue;
         }
-        printf("v:%d u:%d weight:%d\n",v,u,weight);
+        //printf("v:%d u:%d weight:%d\n",v,u,weight);
         insertEdgeVLinkUnDirectGraph(v , u , weight , vGraph);
-        printf("v:%d u:%d weight:%d\n",v,u,weight);
+        //printf("v:%d u:%d weight:%d\n",v,u,weight);
     }
     printf("graph create success\n");
-    int start = rand()%num;
+    /*int start = rand()%num;
     int end = rand()%num;
-    //DistanceGraph * distance = getShortestDistancePathTree(start , end , vGraph);
-    DistanceGraph * distance = getDiameterPathTreeUndirectPathTree(vGraph);
+    DistanceGraph * distance = getShortestDistancePathTree(start , end , vGraph);
+    //DistanceGraph * distance = getDiameterPathTreeUndirectPathTree(vGraph);
     if(distance == NULL){
         printf("no path from %d to %d\n",start , end);
         return;
@@ -58,5 +63,8 @@ int main(){
     printf("start:%d end:%d , distance is %d\n",distance->path[0]->v , distance->path[distance->pathNum -1]->u , distance->distance);
     //testDIstance(distance->distance , start , end , vGraph);
     printf("test success\n");
+    */
+   testMSTPrim(vGraph);
+    return 0;
 }
 

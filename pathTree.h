@@ -6,6 +6,7 @@
 #include"./CircleQueue.h"
 #include"./heap.h"
 #include"./hashTable.h"
+#include"./memory.h"
 
 typedef struct NodePathTree{
     int u;
@@ -20,6 +21,7 @@ typedef struct NodePathTree{
 typedef struct PathTree{
     NodePathTree *root;
     ArrayList *nodeList;
+    int totalDistance;
 }PathTree;
 
 //销毁pathTree，并释放内存
@@ -29,7 +31,7 @@ DistanceGraph* getShortestDistancePathTree(int start , int end , VLinkGraph *gra
 //获取图上最长的最短路径
 //DistanceGraph* getDiameterPathTreeUndirectPathTree(VLinkGraph *graph);
 //生成最小生成树PRIM
-NodePathTree *getGenericMSTPrimPathTree(VLinkGraph *graph , int start);
+PathTree *getGenericMSTPrimPathTree(int start , VLinkGraph *graph);
 
 #include "./pathTree.c"
 
