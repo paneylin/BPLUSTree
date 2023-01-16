@@ -83,6 +83,7 @@ void exchange_data_position_heap(HeapInfo *heapInfo ,int index1 , int index2){
 }
 
 int exchange_heap(HeapInfo *heapInfo , int parentIndex , int leftIndex , int rightIndex){
+    //printf("exchange_heap %d %d %d\n" , parentIndex , leftIndex , rightIndex);
     if(leftIndex == -1 ){
         return -1;
     }else if(rightIndex == -1){
@@ -112,6 +113,7 @@ void exchange_from_top_heap(HeapInfo *heapInfo, int blankPositon){
 }
 
 void exchange_from_bottom_heap(HeapInfo *heapInfo , int position){
+    //printf("exchange_from_bottom_heap %d\n" , position);
     if(position == 0){
         return;
     }
@@ -194,6 +196,7 @@ void * popElementHeap(HeapInfo * heapInfo){
         return NULL;
     }
     void *data = heapInfo->heapData[0]->data;
+    destroy_node_Heap(heapInfo->heapData[0] , NULL);
     if(heapInfo->dataSize > 1){
         heapInfo->heapData[0] = heapInfo->heapData[heapInfo->dataSize - 1];
         heapInfo->heapData[0]->index = 0;
