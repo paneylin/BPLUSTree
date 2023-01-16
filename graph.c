@@ -28,7 +28,7 @@ void freeInteger(int * p){
 
 int parsePointToCommon(int * p){
     if(p == NULL){
-        return 0;
+        return -1;
     }
     int rsl = *p;
     freeMemory(p);
@@ -300,7 +300,7 @@ NodeDFSTreeGraph *get_node_DFS_tree_Graph(int v , DFSTreeGraph * tree , VLinkGra
         return NULL;
     }
     if(v < 0 || v >= getSizeAList(tree->nodeList)){
-        printf("index out of range , get_node_DFS_tree_Graph failed\n");
+        printf("index out of range , get_node_DFS_tree_Graph failed v is %d\n" , v);
         return NULL;
     }
     NodeDFSTreeGraph * node = getElementByIndexAList(v , tree->nodeList);
@@ -614,6 +614,7 @@ int validConnectedDirectGraph(VLinkGraph *graph){
     }
     PointSubGragh *pointSubGraph = group_week_connected_points_Graph(graph);
     int graphSize = getSizeAList(pointSubGraph->goupPoints);
+    //printf("pointSubGraph size is %d\n" , getSizeAList(pointSubGraph->goupPoints));
     if(graphSize > 1){
         destory_point_sub_graph_Graph(pointSubGraph);
         return -1;
@@ -810,6 +811,67 @@ StronglyConnectedGraph *getStronglyConnectedGraph(VLinkGraph *graph){
     destroyStack(nodeStack);
     destroyTreeLRTree(nodeTree);
     destroyAList(strongConnectList);
+    return rsl;
+}
+
+int topLogic_compare_for_heap_Graph(TopLogicNodegraph *node1 , TopLogicNodegraph *node2){
+    if(node1->calNumber == 0){
+        return 1;
+    }
+    return  node2->calNumber - node1->calNumber;
+}
+
+TopLogicNodegraph *create_top_logic_node_Graph(int v , int preNodeNumber){
+    TopLogicNodegraph *node = (TopLogicNodegraph *)mallocMemory(sizeof(TopLogicNodegraph));
+    node->v = v;
+    node->preNode = createArrayListAList(NULL);
+    node->calNumber = preNodeNumber;
+    node->minTime = 0;
+    return node;
+}
+
+TopLogicNodegraph * get_top_logic_node_from_heap_node(ArrayList * heapNodeList , int index){
+    NodeHeapInfo * node = getElementByIndexAList(index , heapNodeList);
+    return (TopLogicNodegraph *)node->data;
+}
+
+ArrayList *getTopLogicalSortGraph(VLinkGraph *graph){
+    if(graph == NULL){
+        printf("graph is null , can not toplogical sort\n");
+        return NULL;
+    }
+    if(isCircleGraph(graph)){
+        printf("circle graph can not toplogical sort\n ");
+        return NULL;
+    }
+    ArrayList *rsl = createArrayListAList(NULL);
+    VLinkGraph *invertGraph = getRevertVLinkGraph(graph);
+    HeapInfo *heap = createHeapInfoHeap(graph->v , topLogic_compare_for_heap_Graph);
+    ArrayList *heapNodeList = createArrayListAList(NULL);
+    for(int i = 0 ; i < graph->v ; i ++){
+        TopLogicNodegraph *node = create_top_logic_node_Graph(i , getSizeAList(invertGraph->adj[i]));
+        NodeHeapInfo * heapNode = insertElementHeap(node , heap);
+        insertArrayListAList(heapNode , heapNodeList);
+    }
+    destroyVlinkGraph(invertGraph);
+    while(!isEmptyHeap(heap)){
+        TopLogicNodegraph * node = popElementHeap(heap);
+        insertArrayListAList(node , rsl);
+        int afterNodeSize = getSizeAList(graph->adj[node->v]);
+        for(int i = 0 ; i < afterNodeSize ; i ++){
+            int afterNodeIndex = ((NodeVlinkGraph *)getElementByIndexAList(i , graph->adj[node->v]))->u;
+            int afetNodeWeight= ((NodeVlinkGraph *)getElementByIndexAList(i , graph->adj[node->v]))->w;
+            TopLogicNodegraph *afterNode = get_top_logic_node_from_heap_node(heapNodeList , afterNodeIndex);
+            afterNode->calNumber --;
+            insertArrayListAList(node , afterNode->preNode);
+            if(afterNode->minTime < node->minTime + afetNodeWeight){
+                afterNode->minTime = node->minTime + afetNodeWeight;
+            }
+            decreseDataHeap(getElementByIndexAList(afterNodeIndex , heapNodeList) , heap);
+        }
+    }
+    destroyHeapInfoHeap(heap);
+    destroyAList(heapNodeList);
     return rsl;
 }
 

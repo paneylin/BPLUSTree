@@ -299,6 +299,58 @@ int testDFSTree(DFSTreeGraph *tree , VLinkGraph *graph){
     return 1;
 }
 
+int testTopLogicSort(VLinkGraph * graph){
+    ArrayList *topLogicSort = getTopLogicalSortGraph(graph);
+    if(topLogicSort == NULL){
+        printf("topLogicSort is NULL\n");
+        return 0;
+    }
+    VLinkGraph *reverseGraph = getRevertVLinkGraph(graph);
+    TreeLRTree * tree = createTreeLRTree(NULL , NULL);
+    for( int i  = 0 ; i < getSizeAList(topLogicSort) ; i ++){
+        TopLogicNodegraph * node = getElementByIndexAList(i , topLogicSort);
+        if(node->calNumber != 9){
+            printf("node->calNumber is not 9 , node->v is %d , node->calNumber is %d\n" , node->v , node->calNumber);
+        }
+        insertDataLRTree(&node->v , tree);
+        int size = getSizeAList(reverseGraph->adj[node->v]);
+        int preNodeIsze = getSizeAList(node->preNode);
+        if(size != preNodeIsze){
+            printf("node->v is %d , size is %d , preNodeIsze is %d\n" , node->v , size , preNodeIsze);
+        }
+        for(int j = 0 ; j < preNodeIsze ; j ++){
+            TopLogicNodegraph *preNode = getElementByIndexAList(j , node->preNode);
+            if(!getDataFromTreeLRTree(&preNode->v , tree)){
+                printf("node->v is %d , pre->v is %d preNode is not preIndex\n" , node->v , preNode->v);
+                return 0;
+            }
+            int flag = 0;
+            for(int k = 0 ; k < size ; k ++){
+                NodeVlinkGraph *edge = getElementByIndexAList(k , reverseGraph->adj[node->v]);
+                if(edge->u == preNode->v){
+                    if(preNode->minTime + edge->w > node->minTime){
+                        printf("minTime error , minTime is %d , pre minTime is %d , edge is %d\n" , node->minTime , preNode->minTime , edge->w);
+                        return 0;
+                    }else if(preNode->minTime + edge->w == node->minTime){
+                        flag = 1;
+                    }
+                    break;
+                }
+                if(k == size - 1){
+                    printf("node->v is %d , pre->v is %d preNode is not preIndex\n" , node->v , preNode->v);
+                    return 0;
+                }
+            }
+            if(flag == 0){
+                printf("minTime uncorrect ,no equal minTime %d\n" , node->v);
+                return 0;
+            }
+        }
+    }
+    printf("topLogicSort test success\n");
+    return 1;
+}
+
 int main(){
     int num = 10;
     scanf("%d",&num);
@@ -315,9 +367,11 @@ int main(){
         }
         insertEdgeVLinkDirectGraph(v , u , weight , vGraph);
     }
-    printf("graph create success\n");
+    testTopLogicSort(vGraph);
+    
+    /*printf("graph create success\n");
     int connectPoint = validConnectedDirectGraph(vGraph);
-    printf("connected Point is %d\n" , connectPoint);
+    printf("connected Point is %d\n" , connectPoint);*/
 
     /*ArrayList *subGraph = getSubGraphGraph(vGraph);
     printf("subFraphs create success\n");

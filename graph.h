@@ -7,6 +7,7 @@
 #include"./CircleQueue.h"
 #include"./stack.h"
 #include"./memory.h"
+#include"./heap.h"
 
 typedef struct VLinkGraph{
     int v;
@@ -89,6 +90,14 @@ typedef struct DFSTreeGraph{
     ArrayList *nodeList;
 }DFSTreeGraph;
 
+typedef struct TopLogicNodegraph{
+    int v;
+    int minTime;
+    ArrayList *preNode;
+    int calNumber;
+}TopLogicNodegraph;
+
+
 const int PATH_NOT_EXSIT_GRAPH = -1;
 const int UNREACHABLE_GRAPH = -1;
 //创建邻接表类型的图，输入图的顶点
@@ -133,8 +142,12 @@ void destroyStronglyConnectedGraph(StronglyConnectedGraph *stronglyConnectedGrap
 void destroyVlinkGraph(VLinkGraph *graph);
 //销毁图，并释放内存
 void destroyVMutrixGraph(VMutrixGraph *graph);
-
-
+//创建路径v到u，权重w
+PathGraph *createPathGraph(int v , int u  , int w);
+//释放路径内存
+void destroyPathGraph(PathGraph * path);
+//获取有向无环图的拓扑排序
+ArrayList *getTopLogicalSortGraph(VLinkGraph *graph);
 
 #include"./graph.c"
 
