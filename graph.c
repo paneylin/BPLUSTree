@@ -287,6 +287,7 @@ DFSTreeGraph *create_DFS_tree_Graph(int v){
     DFSTreeGraph * tree = (DFSTreeGraph *)mallocMemory(sizeof(DFSTreeGraph));
     tree->treeRoots = createArrayListAList(NULL);
     tree->nodeList = createArrayListAList(NULL);
+    tree->toplogicList = createArrayListAList(NULL);
     for(int i = 0 ; i < v ; i ++){
         NodeDFSTreeGraph * node = create_node_DFS_tree_Graph(i);
         insertElementAList(node , tree->nodeList);
@@ -311,7 +312,7 @@ NodeDFSTreeGraph *get_node_DFS_tree_Graph(int v , DFSTreeGraph * tree , VLinkGra
     return node;
 }
 
-int get_next_visit_index_DFS_tree_Graph(NodeDFSTreeGraph * node){
+int get_next_visit_index_DFS_tree_Graph(NodeDFSTreeGraph * node , DFSTreeGraph *tree){
     if(node == NULL){
         printf("node is null or tree is null , failed\n");
         return 0;
@@ -330,6 +331,8 @@ int get_next_visit_index_DFS_tree_Graph(NodeDFSTreeGraph * node){
             deleteElementByIndexAList(i , node->adjNodeList);
             i --;
             adjSize --;
+        }else if(searchNode->rightIndex == 0){
+            tree->isCicle = 1;
         }
     }
     node->visitIndex = getSizeAList(node->adjNodeList);
@@ -380,9 +383,10 @@ DFSTreeGraph *getDFSTreeGraph(int startP ,VLinkGraph * graph){
         node->leftIndex = treeIndex ++;
         node->height = 1;
         do{
-            int nextNodeIndex = get_next_visit_index_DFS_tree_Graph(node);
+            int nextNodeIndex = get_next_visit_index_DFS_tree_Graph(node , tree);
             if(nextNodeIndex == -1){
                 node->rightIndex = treeIndex ++;
+                insertElementByIndexAList(0 , node , tree->toplogicList);
                 node = popStack(nodeStack);
             }else{
                 NodeDFSTreeGraph * nextNode = get_node_DFS_tree_Graph(nextNodeIndex , tree , graph);
@@ -650,7 +654,7 @@ int compare_path_Graph(PathGraph *data1 , PathGraph * data2){
     return data1->u - data2->u;
 }
 
-int valid_circle_dfs_node_Graph(NodeDFSTreeGraph* node){
+/*int valid_circle_dfs_node_Graph(NodeDFSTreeGraph* node){
     if(node == NULL){
         printf("node is null or tree is null , failed\n");
         return 0;
@@ -663,19 +667,13 @@ int valid_circle_dfs_node_Graph(NodeDFSTreeGraph* node){
         }
     }
     return 0;
-}
+}*/
 
 int isCircleGraph(VLinkGraph *graph){
     DFSTreeGraph *dfsTree = getDFSTreeGraph(0,graph);
-    int size = getSizeAList(dfsTree->nodeList);
-    for(int i = 0 ; i < size ; i ++){
-        if(valid_circle_dfs_node_Graph(getElementByIndexAList(i , dfsTree->nodeList))){
-            destroyDFSTreeGraph(dfsTree);
-            return 1;
-        }
-    }
+    int validCircle = dfsTree->isCicle;
     destroyDFSTreeGraph(dfsTree);
-    return 0;
+    return validCircle;
 }
 
 PathStronglyConnectedGraph *create_path_strong_connected_Graph(int v , int u , int w , int nodeIndex){
@@ -815,8 +813,8 @@ StronglyConnectedGraph *getStronglyConnectedGraph(VLinkGraph *graph){
 }
 
 int topLogic_compare_for_heap_Graph(TopLogicNodegraph *node1 , TopLogicNodegraph *node2){
-    if(node1->calNumber == 0){
-        return 1;
+    if(node1->calNumber == 0 && node2->calNumber == 0){
+        return node2->minTime - node1->minTime;
     }
     return  node2->calNumber - node1->calNumber;
 }
@@ -851,19 +849,19 @@ ArrayList *getTopLogicalSortGraph(VLinkGraph *graph){
     for(int i = 0 ; i < graph->v ; i ++){
         TopLogicNodegraph *node = create_top_logic_node_Graph(i , getSizeAList(invertGraph->adj[i]));
         NodeHeapInfo * heapNode = insertElementHeap(node , heap);
-        insertArrayListAList(heapNode , heapNodeList);
+        insertElementAList(heapNode , heapNodeList);
     }
     destroyVlinkGraph(invertGraph);
     while(!isEmptyHeap(heap)){
         TopLogicNodegraph * node = popElementHeap(heap);
-        insertArrayListAList(node , rsl);
+        insertElementAList(node , rsl);
         int afterNodeSize = getSizeAList(graph->adj[node->v]);
         for(int i = 0 ; i < afterNodeSize ; i ++){
             int afterNodeIndex = ((NodeVlinkGraph *)getElementByIndexAList(i , graph->adj[node->v]))->u;
             int afetNodeWeight= ((NodeVlinkGraph *)getElementByIndexAList(i , graph->adj[node->v]))->w;
             TopLogicNodegraph *afterNode = get_top_logic_node_from_heap_node(heapNodeList , afterNodeIndex);
             afterNode->calNumber --;
-            insertArrayListAList(node , afterNode->preNode);
+            insertElementAList(node , afterNode->preNode);
             if(afterNode->minTime < node->minTime + afetNodeWeight){
                 afterNode->minTime = node->minTime + afetNodeWeight;
             }

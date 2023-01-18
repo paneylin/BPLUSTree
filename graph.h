@@ -88,6 +88,9 @@ typedef struct DFSTreeGraph{
     ArrayList *treeRoots;
     //根据传入的VLINkGraph图，生成的DNodeDFSTreeGraph节点
     ArrayList *nodeList;
+    //拓扑排序
+    ArrayList *toplogicList;
+    int isCicle;
 }DFSTreeGraph;
 
 typedef struct TopLogicNodegraph{
